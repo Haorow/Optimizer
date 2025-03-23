@@ -33,6 +33,7 @@ Permet d'inviter en groupe les personnages correspondants aux fenêtres spécifi
 ## Fonctionnalités à venir
 
 - Ajout de la fonctionnalité du bouton Masquer dans la barre des tâches et d'un menu contextuel lors du clic sur l'icone
+- Ajout du bouton permettant de définir les coordonnées de l'entrée de texte du tchat pour la fonctionnalité Easy Team
 - Ajout d'un fichier settings.ini pour sauvegarder l'état de l'application à la fermeture
 
 ## Prérequis
