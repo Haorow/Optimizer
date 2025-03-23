@@ -21,7 +21,7 @@ Permet d'inviter en groupe les personnages correspondants aux fenêtres spécifi
 
 ## Scripts individuels fonctionnant indépendament de l'application
 
-### Ces scripts sont à modifier et intégrer dans le code selon le code UI et le code behind existant
+#### Ces scripts sont à modifier et intégrer dans le code selon le code UI et le code behind existant
 
 - Fonctionnalité Mouse Clone
 - Fonctionnalité Hotkey Clone
