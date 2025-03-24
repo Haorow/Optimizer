@@ -16,7 +16,7 @@
         d:HorizontalAlignment="Center"
         d:VerticalAlignment="Center"
         Width="400"
-        Height="650">
+        Height="680">
     <!-- 390 ou 650 -->
 
 
@@ -349,6 +349,10 @@
                     <Setter Property="Foreground" Value="Red"/>
                     <Setter Property="FontWeight" Value="Bold"/>
                 </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="#FF404040"/>
+                    <Setter Property="Background" Value="#FF303030"/>
+                </Trigger>
             </Style.Triggers>
         </Style>
 
@@ -579,8 +583,8 @@
     <Border MouseDown="ClearFocus_MouseDown" Background="#FF252525" CornerRadius="10" BorderThickness="0">
 
         <!-- INTERFACE GENERALE -->
-        <Grid Width="400" Height="650" Background="#00FFFFFF">
-            <StackPanel Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="400" Height="650" Orientation="Vertical">
+        <Grid Width="400" Height="680" Background="#00FFFFFF">
+            <StackPanel Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="400" Height="680" Orientation="Vertical">
 
                 <!-- BARRE DE TITRE -->
                 <Grid x:Name="TitleBar" Height="30" Background="Transparent" MouseDown="StackPanel_MouseDown">
@@ -599,7 +603,7 @@
                         <TextBlock Text="Optimizer" VerticalAlignment="Center" Margin="5,0,0,0" FontFamily="Bahnschrift Light" Foreground="White"/>
                     </StackPanel>
 
-                    <!-- Partie Droite : Boutons -->
+                    <!-- Partie Droite : Boutons d'interface -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <!-- BOUTON MASQUER -->
                         <Button x:Name="Btn_Hide" Style="{StaticResource WindowButtonStyle}">
@@ -741,7 +745,7 @@
                 </ToggleButton>
 
                 <!-- INTERFACE PARAMETRES -->
-                <StackPanel Orientation="Vertical" Height="260">
+                <StackPanel Orientation="Vertical" Height="290">
 
                     <!-- MOUSE CLONE -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
@@ -796,6 +800,12 @@
                         <ToggleButton x:Name="TglBtn_ET_GlobalStatus" Style="{StaticResource SwitchToggleButton}" Content="" Margin="10,0,0,0"/>
                         <TextBlock x:Name="TxtBloc_ET_LabelSettings" Style="{StaticResource LabelSettings}" Text="Easy Team"/>
                         <ComboBox x:Name="CboBox_ET_Leader" Style="{StaticResource FlatComboBoxStyle}" ItemsSource="{Binding LeaderOptions}" DisplayMemberPath="DisplayName" SelectedValuePath="Value" SelectedValue="{Binding SelectedLeader}"/>
+                    </StackPanel>
+                    
+                    <!-- EASY TEAM - POSITION DU TCHAT -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
+                        <TextBlock x:Name="TxtBloc_ET_TchatPosLabelSettings"  Style="{StaticResource SubLabelSettings}" Text="Position du tchat"/>
+                        <Button x:Name="Btn_ET_TchatPos" Style="{StaticResource Button_Shortcuts}" Content="Définir la position du tchat" IsEnabled="False"/>
                     </StackPanel>
 
                 </StackPanel>
