@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -86,6 +87,9 @@ namespace Optimizer
                     _errorTimer.Stop();
                 }
             };
+
+            // Forcer la désactivation initiale du bouton de position du tchat
+            Btn_ET_TchatPos.IsEnabled = false;
         }
 
         // BARRE DE TITRE : DEPLACEMENT DE LA FENETRE
@@ -589,6 +593,20 @@ namespace Optimizer
             if (e.Key == Key.Enter)
             {
                 Keyboard.ClearFocus();
+            }
+        }
+
+        //COMBOBOX LEADER : DEFINI L'ETAT DU BOUTON DE POSITION DU TCHAT SELON LA SELECTION
+        private void CboBox_ET_Leader_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CboBox_ET_Leader.SelectedItem is LeaderOption selected)
+            {
+                // Activer le bouton uniquement si ce n'est pas l'option par défaut
+                Btn_ET_TchatPos.IsEnabled = selected.Value != null;
+            }
+            else
+            {
+                Btn_ET_TchatPos.IsEnabled = false;
             }
         }
 
