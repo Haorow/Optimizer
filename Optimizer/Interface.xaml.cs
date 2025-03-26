@@ -70,6 +70,17 @@ namespace Optimizer
             InitializeComponent();
             this.DataContext = new CharactersViewModel();
 
+            // Centrer la fenêtre au démarrage
+            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
+            // Ajuster la position après le chargement de la fenêtre
+            this.Loaded += (s, e) =>
+            {
+                // Décalage vers le haut pour centrer l'application lorsque le menu Paramètres est déplié
+                double offsetY = 145;
+                this.Top -= offsetY;
+            };
+
             // Obtenir le chemin absolu de l'icône par rapport au répertoire de l'exécutable
             string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "optimizer_icon.ico");
 
@@ -182,8 +193,8 @@ namespace Optimizer
         // BOUTON PARAMETRES : DEPLOIEMENT DU PANNEAU DE CONFIGURATION
         private void ToggleButton_Checked(object sender, RoutedEventArgs e)
         {
-            // Agrandir la fenêtre à 650 quand le bouton est coché
-            this.Height = 650;
+            // Agrandir la fenêtre à 680 quand le bouton est coché
+            this.Height = 680;
         }
 
         // BOUTON PARAMETRES : REPLI DU PANNEAU DE CONFIGURATION

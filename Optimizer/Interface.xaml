@@ -17,8 +17,7 @@
         d:HorizontalAlignment="Center"
         d:VerticalAlignment="Center"
         Width="400"
-        Height="680">
-    <!-- 390 ou 650 -->
+        Height="680"> <!-- Height pour le dev : 390 (replié) ou 680 (déplié) -->
 
 
     <Window.Resources>
