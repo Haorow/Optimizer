@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -7,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Hardcodet.Wpf.TaskbarNotification;
 
 public static class WindowHelper
 {
@@ -53,6 +55,7 @@ namespace Optimizer
         private DispatcherTimer _errorTimer;
         private System.Windows.Controls.Button _currentErrorButton;
         private Dictionary<System.Windows.Controls.TextBox, System.Windows.Controls.TextBox> _minMaxPairs;
+        private TaskbarIcon taskbarIcon;
 
         // Ajoute cette classe imbriquée
         public class LeaderOption
@@ -66,6 +69,29 @@ namespace Optimizer
         {
             InitializeComponent();
             this.DataContext = new CharactersViewModel();
+
+            // Obtenir le chemin absolu de l'icône par rapport au répertoire de l'exécutable
+            string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "optimizer_icon.ico");
+
+            // Vérifier si le fichier existe
+            if (!File.Exists(iconPath))
+            {
+                throw new FileNotFoundException($"Le fichier d'icône n'a pas été trouvé : {iconPath}");
+            }
+
+            // Initialiser l'icône de la barre des tâches
+            taskbarIcon = new TaskbarIcon
+            {
+                Icon = new Icon(iconPath),
+                ToolTipText = "Optimizer",
+                Visibility = Visibility.Collapsed
+            };
+
+            // Initialiser le menu contextuel personnalisé
+            InitializeContextMenu();
+
+            // Gérer le double-clic sur l'icône pour restaurer la fenêtre
+            taskbarIcon.TrayMouseDoubleClick += (s, e) => RestoreWindow();
 
             // Initialiser les paires Min/Max
             _minMaxPairs = new Dictionary<System.Windows.Controls.TextBox, System.Windows.Controls.TextBox>
@@ -92,6 +118,39 @@ namespace Optimizer
             Btn_ET_TchatPos.IsEnabled = false;
         }
 
+        // TRAYICON (BOUTON MASQUER) : GESTION DU MENU CONTEXTUEL
+        private void InitializeContextMenu()
+        {
+            // Créer un nouveau ContextMenu
+            var contextMenu = new ContextMenu();
+
+            // Appliquer le style personnalisé pour le ContextMenu
+            contextMenu.Style = (Style)this.FindResource(typeof(ContextMenu));
+
+            // Option "Afficher"
+            var showMenuItem = new MenuItem { Header = "Afficher" };
+            showMenuItem.Style = (Style)this.FindResource(typeof(MenuItem)); // Appliquer le style personnalisé
+            showMenuItem.Click += (s, e) => RestoreWindow();
+            contextMenu.Items.Add(showMenuItem);
+
+            // Option "Fermer"
+            var exitMenuItem = new MenuItem { Header = "Fermer" };
+            exitMenuItem.Style = (Style)this.FindResource(typeof(MenuItem)); // Appliquer le style personnalisé
+            exitMenuItem.Click += (s, e) => System.Windows.Application.Current.Shutdown();
+            contextMenu.Items.Add(exitMenuItem);
+
+            // Associer le menu contextuel à l'icône de la barre des tâches
+            taskbarIcon.ContextMenu = contextMenu;
+        }
+
+        // TRAYICON (BOUTON MASQUER) : AFFICHER LA FENÊTRE
+        private void RestoreWindow()
+        {
+            this.Show();
+            this.WindowState = WindowState.Normal;
+            taskbarIcon.Visibility = Visibility.Collapsed;
+        }
+
         // BARRE DE TITRE : DEPLACEMENT DE LA FENETRE
         private void StackPanel_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -102,7 +161,11 @@ namespace Optimizer
         }
 
         // BOUTON MASQUER : MASQUER L'APPLICATION DANS LA BARRE DES TACHES
-        // A créer
+        private void Btn_Hide_Click(object sender, RoutedEventArgs e)
+        {
+            this.Hide();
+            taskbarIcon.Visibility = Visibility.Visible;
+        }
 
         // BOUTON REDUIRE : MINIMISER L'APPLICATION
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)

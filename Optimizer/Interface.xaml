@@ -4,6 +4,7 @@
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:sys="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
 		xmlns:local="clr-namespace:Optimizer"
 		mc:Ignorable="d"
         
@@ -23,6 +24,53 @@
     <Window.Resources>
         <!-- CONVERTISSEUR -->
         <local:StringNotEmptyConverter x:Key="StringNotEmptyConverter"/>
+
+        <!-- STYLE : MENU CONTEXTUEL -->
+        <Style TargetType="ContextMenu">
+            <Setter Property="Height" Value="80"/>
+            <Setter Property="Width" Value="100"/>
+            <Setter Property="Background" Value="#FF252525" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="10">
+                            <!-- Utiliser un StackPanel pour aligner les éléments verticalement -->
+                            <StackPanel>
+                                <ItemsPresenter />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : ITEMS DU MENU CONTEXTUEL -->
+        <Style TargetType="MenuItem">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Width" Value="100"/>
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontFamily" Value="Bahnschrift Light"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="10">
+                            <!-- Centre le contenu -->
+                            <ContentPresenter Content="{TemplateBinding Header}"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="#3AAD3A" />
+                                <Setter Property="FontFamily" Value="Bahnschrift Semibold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <!-- STYLE : BARRE DE TITRE -->
         <Style x:Key="WindowButtonStyle" TargetType="Button">
@@ -577,8 +625,6 @@
     </Window.Resources>
 
 
-
-
     <!-- FENÊTRE -->
     <Border MouseDown="ClearFocus_MouseDown" Background="#FF252525" CornerRadius="10" BorderThickness="0">
 
@@ -606,7 +652,7 @@
                     <!-- Partie Droite : Boutons d'interface -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <!-- BOUTON MASQUER -->
-                        <Button x:Name="Btn_Hide" Style="{StaticResource WindowButtonStyle}">
+                        <Button x:Name="Btn_Hide" Style="{StaticResource WindowButtonStyle}" Click="Btn_Hide_Click">
                             <Image Source="/Optimizer;component/Assets/Sources/hide.png" Height="10" Stretch="Uniform"/>
                         </Button>
 
