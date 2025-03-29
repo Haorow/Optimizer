@@ -17,7 +17,8 @@
         d:HorizontalAlignment="Center"
         d:VerticalAlignment="Center"
         Width="400"
-        Height="680"> <!-- Height pour le dev : 390 (replié) ou 680 (déplié) -->
+        Height="680">
+    <!-- Height pour le dev : 390 (replié) ou 680 (déplié) -->
 
 
     <Window.Resources>
@@ -565,7 +566,7 @@
             <Setter Property="Margin" Value="5,0,7.5,0"/>
             <Setter Property="Background" Value="#FF353535"/>
             <Setter Property="Foreground" Value="#FF909090"/>
-            <Setter Property="FontFamily" Value="Bahnschrift SemiBold"/>
+            <Setter Property="FontFamily" Value="Bahnschrift"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="SelectedIndex" Value="0"/>
             <Setter Property="ItemContainerStyle" Value="{StaticResource FlatComboBoxItemStyle}"/>
@@ -808,12 +809,12 @@
                         <TextBox x:Name="TxtBox_MC_MaxDelay" Style="{StaticResource TextBoxDelays}" Text="125ms" Margin="2.5,0,0,0" IsEnabled="{Binding IsChecked, ElementName=ChkBox_MC_Delays}" PreviewMouseDown="TextBox_PreviewMouseDown" LostKeyboardFocus="TextBox_LostKeyboardFocus" KeyUp="TextBox_KeyUp" PreviewTextInput="NumberValidation_PreviewTextInput" DataObject.Pasting="NumberValidation_Pasting"/>
                     </StackPanel>
 
-                    <!-- MOUSE CLONE - POSITION DU CURSEUR -->
+                    <!-- MOUSE CLONE - REPLICATION DU CLIC -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
-                        <TextBlock x:Name="TxtBloc_MC_CursorPosLabelSettings" Style="{StaticResource SubLabelSettings}" Text="Position du curseur"/>
-                        <ComboBox x:Name="CboBox_MC_CursorPos" Style="{StaticResource FlatComboBoxStyle}">
-                            <ComboBoxItem Content="Fixe (0px)"/>
-                            <ComboBoxItem Content="Décalée (5px)"/>
+                        <TextBlock x:Name="TxtBloc_MC_CursorPosLabelSettings" Style="{StaticResource SubLabelSettings}" Text="Gestion des fenêtres au clic"/>
+                        <ComboBox x:Name="CboBox_MC_Layout" Style="{StaticResource FlatComboBoxStyle}">
+                            <ComboBoxItem Content="Fenêtre unique"/>
+                            <ComboBoxItem Content="Fenêtres individuelles"/>
                         </ComboBox>
                     </StackPanel>
 

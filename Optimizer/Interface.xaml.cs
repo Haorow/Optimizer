@@ -419,11 +419,48 @@ namespace Optimizer
         // BOUTON RAFRAICHIR : RAFRAICHIR LA LISTE
         private void BtnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            // Récupérer le ViewModel actuel
-            if (this.DataContext is Interface.CharactersViewModel viewModel)
+            try
             {
-                // Rafraîchir les données sans recréer complètement la collection
-                viewModel.LoadWindows();
+                // Récupérer le ViewModel actuel
+                if (this.DataContext is Interface.CharactersViewModel viewModel)
+                {
+                    // Rafraîchir les données sans recréer complètement la collection
+                    viewModel.LoadWindows();
+
+                    // Collecter les données une seule fois
+                    var rawData = CollectData();
+
+                    // Appeler la méthode de génération de rapport avec les données nécessaires
+                    ReportGenerator.GenerateDataReport(
+                        rawData["Personnages"] as ObservableCollection<Personnage>,
+                        (bool)rawData["MC_GlobalStatus"],
+                        rawData["MC_Shortcut"].ToString(),
+                        (bool)rawData["MC_Delays"],
+                        rawData["MC_MinDelay"].ToString(),
+                        rawData["MC_MaxDelay"].ToString(),
+                        rawData["MC_Layout"],
+                        (bool)rawData["HC_GlobalStatus"],
+                        rawData["HC_Shortcut"].ToString(),
+                        (bool)rawData["HC_Delays"],
+                        rawData["HC_MinDelay"].ToString(),
+                        rawData["HC_MaxDelay"].ToString(),
+                        (bool)rawData["WS_GlobalStatus"],
+                        rawData["WS_Shortcut"].ToString(),
+                        (bool)rawData["ET_GlobalStatus"],
+                        rawData["ET_Leader"],
+                        rawData["ET_TchatPos"].ToString()
+                    );
+
+                    // Convertir les données pour AHK v2
+                    var ahkData = AhkConverter.ConvertToAhkData(rawData);
+
+                    // Générer le script AHK
+                    ScriptGenerator.GenerateAhkScript(ahkData);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Erreur lors du rafraîchissement : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -681,6 +718,44 @@ namespace Optimizer
             else
             {
                 Btn_ET_TchatPos.IsEnabled = false;
+            }
+        }
+
+
+        private Dictionary<string, object> CollectData()
+        {
+            // Récupérer le ViewModel actuel
+            if (this.DataContext is CharactersViewModel viewModel)
+            {
+                return new Dictionary<string, object>
+        {
+            { "Personnages", viewModel.Personnages },
+            { "MC_GlobalStatus", TglBtn_MC_GlobalStatus.IsChecked },
+            { "MC_Shortcut", Btn_MC_Shortcut.Content.ToString() },
+            { "MC_Delays", ChkBox_MC_Delays.IsChecked },
+            { "MC_MinDelay", TxtBox_MC_MinDelay.Text.Replace("ms", "") },
+            { "MC_MaxDelay", TxtBox_MC_MaxDelay.Text.Replace("ms", "") },
+            { "MC_Layout", CboBox_MC_Layout.SelectedItem?.ToString() },
+            {
+                "ActiveWindows",
+                viewModel.Personnages != null && viewModel.Personnages.Any()
+                    ? viewModel.Personnages.Where(p => p.MouseClone).Select(p => p.WindowName).ToHashSet()
+                    : new HashSet<string>() // Initialisation explicite d'un ensemble vide
+            },            { "HC_GlobalStatus", TglBtn_HC_GlobalStatus.IsChecked },
+            { "HC_Shortcut", Btn_HC_Shortcut.Content.ToString() },
+            { "HC_Delays", ChkBox_HC_Delays.IsChecked },
+            { "HC_MinDelay", TxtBox_HC_MinDelay.Text.Replace("ms", "") },
+            { "HC_MaxDelay", TxtBox_HC_MaxDelay.Text.Replace("ms", "") },
+            { "WS_GlobalStatus", TglBtn_WS_GlobalStatus.IsChecked },
+            { "WS_Shortcut", Btn_WS_Shortcut.Content.ToString() },
+            { "ET_GlobalStatus", TglBtn_ET_GlobalStatus.IsChecked },
+            { "ET_Leader", CboBox_ET_Leader.SelectedItem?.ToString() },
+            { "ET_TchatPos", Btn_ET_TchatPos.Content.ToString() }
+        };
+            }
+            else
+            {
+                throw new InvalidOperationException("DataContext n'est pas une instance de CharactersViewModel.");
             }
         }
 
