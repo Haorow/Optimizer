@@ -7,10 +7,7 @@ namespace Optimizer
 {
     public static class ScriptGenerator
     {
-        /// <summary>
-        /// Génère un script AHK v2 à partir des données converties.
-        /// </summary>
-        public static void GenerateAhkScript(AhkData ahkData)
+        /*public static void GenerateMouseCloneScript(AhkData ahkData)
         {
             try
             {
@@ -78,7 +75,7 @@ namespace Optimizer
                 }
 
                 // Sauvegarder dans un fichier
-                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OptimizerScript.ahk");
+                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MouseClone.ahk");
                 File.WriteAllText(filePath, script.ToString());
 
                 // Informer l'utilisateur
@@ -88,6 +85,126 @@ namespace Optimizer
             {
                 System.Windows.MessageBox.Show($"Erreur lors de la génération du script AHK : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }*/
+
+        public static void Generate_MC_Script()
+        {
+            // Contenu du script AHK temporaire
+            string scriptContent =
+@"; Script MC Temporaire
+
+; Définir la fonction ShowMsgBox
+ShowMsgBox(*) {
+    MsgBox(""Ceci est un script Mouse Clone temporaire !"")
+    ExitApp()
+}
+
+; Assigner F1 pour appeler ShowMsgBox
+Hotkey(""F1"", ShowMsgBox)
+
+; Boucle infinie pour maintenir le script actif
+while true {
+    Sleep(100)
+}";
+
+            // Chemin du fichier temporaire
+            string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MC-Temp.ahk");
+
+            // Écrire le contenu dans le fichier
+            File.WriteAllText(scriptPath, scriptContent);
+
+            // Informer l'utilisateur
+            System.Windows.MessageBox.Show($"Script MC temporaire généré : {scriptPath}", "MC", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        public static void Generate_HC_Script()
+        {
+            // Contenu du script AHK temporaire
+            string scriptContent =
+@"; Script HC Temporaire
+
+; Définir la fonction ShowMsgBox
+ShowMsgBox(*) {
+    MsgBox(""Ceci est un script Hotkey Clone temporaire !"")
+    ExitApp()
+}
+
+; Assigner F2 pour appeler ShowMsgBox
+Hotkey(""F2"", ShowMsgBox)
+
+; Boucle infinie pour maintenir le script actif
+while true {
+    Sleep(100)
+}";
+
+            // Chemin du fichier temporaire
+            string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "HC-Temp.ahk");
+
+            // Écrire le contenu dans le fichier
+            File.WriteAllText(scriptPath, scriptContent);
+
+            // Informer l'utilisateur
+            System.Windows.MessageBox.Show($"Script HC temporaire généré : {scriptPath}", "HC", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        public static void Generate_WS_Script()
+        {
+            // Contenu du script AHK temporaire
+            string scriptContent =
+@"; Script MC Temporaire
+
+; Définir la fonction ShowMsgBox
+ShowMsgBox(*) {
+    MsgBox(""Ceci est un script Window Switcher temporaire !"")
+    ExitApp()
+}
+
+; Assigner F3 pour appeler ShowMsgBox
+Hotkey(""F3"", ShowMsgBox)
+
+; Boucle infinie pour maintenir le script actif
+while true {
+    Sleep(100)
+}";
+
+            // Chemin du fichier temporaire
+            string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "WS-Temp.ahk");
+
+            // Écrire le contenu dans le fichier
+            File.WriteAllText(scriptPath, scriptContent);
+
+            // Informer l'utilisateur
+            System.Windows.MessageBox.Show($"Script WS temporaire généré : {scriptPath}", "WS", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        public static void Generate_ET_Script()
+        {
+            // Contenu du script AHK temporaire
+            string scriptContent =
+@"; Script ET Temporaire
+
+; Définir la fonction ShowMsgBox
+ShowMsgBox(*) {
+    MsgBox(""Ceci est un script Easy Team temporaire !"")
+    ExitApp()
+}
+
+; Assigner F4 pour appeler ShowMsgBox
+Hotkey(""F4"", ShowMsgBox)
+
+; Boucle infinie pour maintenir le script actif
+while true {
+    Sleep(100)
+}";
+
+            // Chemin du fichier temporaire
+            string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ET-Temp.ahk");
+
+            // Écrire le contenu dans le fichier
+            File.WriteAllText(scriptPath, scriptContent);
+
+            // Informer l'utilisateur
+            System.Windows.MessageBox.Show($"Script ET temporaire généré : {scriptPath}", "ET", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

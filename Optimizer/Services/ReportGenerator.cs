@@ -19,7 +19,7 @@ namespace Optimizer
         /// <param name="mcDelays">État des délais de Mouse Clone.</param>
         /// <param name="mcMinDelay">Délai minimum de Mouse Clone.</param>
         /// <param name="mcMaxDelay">Délai maximum de Mouse Clone.</param>
-        /// <param name="mcCursorPos">Position du curseur de Mouse Clone.</param>
+        /// <param name="mcLayout">Gestion des fenêtres au clic de Mouse Clone.</param>
         /// <param name="hcGlobalStatus">État global de Hotkey Clone.</param>
         /// <param name="hcShortcut">Raccourci de Hotkey Clone.</param>
         /// <param name="hcDelays">État des délais de Hotkey Clone.</param>
@@ -38,7 +38,7 @@ namespace Optimizer
     bool mcDelays,
     string mcMinDelay,
     string mcMaxDelay,
-    object mcCursorPos,
+    object mcLayout,
     bool hcGlobalStatus,
     string hcShortcut,
     bool hcDelays,
@@ -81,8 +81,8 @@ namespace Optimizer
                 report.AppendLine($"MC Max Delay : {mcMaxDelay.Replace("ms", "")}");
 
                 // Récupérer la position du curseur
-                var cursorPos = mcCursorPos as ComboBoxItem;
-                report.AppendLine($"MC Cursor Pos : {cursorPos?.Content?.ToString() ?? "Non défini"}");
+                var Layout = mcLayout as ComboBoxItem;
+                report.AppendLine($"MC Layout : {Layout?.Content?.ToString() ?? "Non défini"}");
 
                 // Paramètres globaux : Hotkey Clone
                 report.AppendLine("Hotkey Clone");

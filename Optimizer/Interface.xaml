@@ -34,7 +34,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="10">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="10,10,10,0">
                             <!-- Utiliser un StackPanel pour aligner les éléments verticalement -->
                             <StackPanel>
                                 <ItemsPresenter />
@@ -91,7 +91,6 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="#20FFFFFF"/>
-                                <Setter Property="Cursor" Value="Hand"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="#4BC64B"/>
@@ -701,9 +700,9 @@
                                             <Image Source="/Optimizer;component/Assets/Sources/up.png" Height="7"  Stretch="Uniform"/>
                                         </Button.Content>
                                         <!-- N'affiche le bouton que si la ligne est remplie -->
-                                        <Button.Visibility>
+                                        <!--<Button.Visibility>
                                             <Binding Path="CharacterName" Converter="{StaticResource StringNotEmptyConverter}"/>
-                                        </Button.Visibility>
+                                        </Button.Visibility>-->
                                     </Button>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -717,9 +716,9 @@
                                             <Image Source="/Optimizer;component/Assets/Sources/down.png" Height="7" Stretch="Uniform"/>
                                         </Button.Content>
                                         <!-- N'affiche le bouton que si la ligne est remplie -->
-                                        <Button.Visibility>
+                                        <!--<Button.Visibility>
                                             <Binding Path="CharacterName" Converter="{StaticResource StringNotEmptyConverter}"/>
-                                        </Button.Visibility>
+                                        </Button.Visibility>-->
                                     </Button>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -795,7 +794,7 @@
 
                     <!-- MOUSE CLONE -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
-                        <ToggleButton x:Name="TglBtn_MC_GlobalStatus" Style="{StaticResource SwitchToggleButton}" Content="" Margin="10,0,0,0"/>
+                        <ToggleButton x:Name="TglBtn_MC_GlobalStatus" Style="{StaticResource SwitchToggleButton}" Content="" Margin="10,0,0,0" Checked="TglBtn_MC_GlobalStatus_Checked" Unchecked="TglBtn_MC_GlobalStatus_Unchecked" />
                         <TextBlock x:Name="TxtBloc_MC_LabelSettings" Style="{StaticResource LabelSettings}" Text="Mouse Clone"/>
                         <Button x:Name="Btn_MC_Shortcut" Style="{StaticResource Button_Shortcuts}" Content="Bouton du milieu" Click="ShortcutButton_Click"/>
                     </StackPanel>
@@ -811,7 +810,7 @@
 
                     <!-- MOUSE CLONE - REPLICATION DU CLIC -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
-                        <TextBlock x:Name="TxtBloc_MC_CursorPosLabelSettings" Style="{StaticResource SubLabelSettings}" Text="Gestion des fenêtres au clic"/>
+                        <TextBlock x:Name="TxtBloc_MC_LayoutLabelSettings" Style="{StaticResource SubLabelSettings}" Text="Gestion des fenêtres au clic"/>
                         <ComboBox x:Name="CboBox_MC_Layout" Style="{StaticResource FlatComboBoxStyle}">
                             <ComboBoxItem Content="Fenêtre unique"/>
                             <ComboBoxItem Content="Fenêtres individuelles"/>
@@ -820,7 +819,7 @@
 
                     <!-- HOTKEY CLONE -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,20,0,0">
-                        <ToggleButton x:Name="TglBtn_HC_GlobalStatus" Style="{StaticResource SwitchToggleButton}" Content="" Margin="10,0,0,0"/>
+                        <ToggleButton x:Name="TglBtn_HC_GlobalStatus" Style="{StaticResource SwitchToggleButton}" Content="" Margin="10,0,0,0" Checked="TglBtn_HC_GlobalStatus_Checked" Unchecked="TglBtn_HC_GlobalStatus_Unchecked"/>
                         <TextBlock x:Name="TxtBloc_HC_LabelSettings" Style="{StaticResource LabelSettings}" Text="Hotkey Clone"/>
                         <Button x:Name="Btn_HC_Shortcut" Style="{StaticResource Button_Shortcuts}" Content="Ctrl+F1" Click="ShortcutButton_Click"/>
                     </StackPanel>
@@ -836,14 +835,14 @@
 
                     <!-- WINDOW SWITCHER -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,20,0,0">
-                        <ToggleButton x:Name="TglBtn_WS_GlobalStatus" Style="{StaticResource SwitchToggleButton}" Content="" Margin="10,0,0,0"/>
+                        <ToggleButton x:Name="TglBtn_WS_GlobalStatus" Style="{StaticResource SwitchToggleButton}" Content="" Margin="10,0,0,0" Checked="TglBtn_WS_GlobalStatus_Checked" Unchecked="TglBtn_WS_GlobalStatus_Unchecked"/>
                         <TextBlock x:Name="TxtBloc_WS_LabelSettings" Style="{StaticResource LabelSettings}" Text="Window Switcher"/>
                         <Button x:Name="Btn_WS_Shortcut" Style="{StaticResource Button_Shortcuts}" Content="F1" Click="ShortcutButton_Click"/>
                     </StackPanel>
 
                     <!-- EASY TEAM -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,20,0,0">
-                        <ToggleButton x:Name="TglBtn_ET_GlobalStatus" Style="{StaticResource SwitchToggleButton}" Content="" Margin="10,0,0,0"/>
+                        <ToggleButton x:Name="TglBtn_ET_GlobalStatus" Style="{StaticResource SwitchToggleButton}" Content="" Margin="10,0,0,0" Checked="TglBtn_ET_GlobalStatus_Checked" Unchecked="TglBtn_ET_GlobalStatus_Unchecked"/>
                         <TextBlock x:Name="TxtBloc_ET_LabelSettings" Style="{StaticResource LabelSettings}" Text="Easy Team"/>
                         <ComboBox x:Name="CboBox_ET_Leader" Style="{StaticResource FlatComboBoxStyle}" ItemsSource="{Binding LeaderOptions}" DisplayMemberPath="DisplayName" SelectedValuePath="Value" SelectedValue="{Binding SelectedLeader}" SelectionChanged="CboBox_ET_Leader_SelectionChanged"/>
                     </StackPanel>

@@ -115,7 +115,7 @@ namespace Optimizer
         public string MouseCloneShortcut { get; set; }
         public int MouseCloneMinDelay { get; set; }
         public int MouseCloneMaxDelay { get; set; }
-        public string MouseCloneLayout { get; set; } // Nouvelle propriété pour le layout
+        public string MouseCloneLayout { get; set; }
 
         public bool HotkeyCloneEnabled { get; set; }
         public string HotkeyCloneShortcut { get; set; }

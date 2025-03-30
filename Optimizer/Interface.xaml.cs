@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -427,11 +428,11 @@ namespace Optimizer
                     // Rafraîchir les données sans recréer complètement la collection
                     viewModel.LoadWindows();
 
-                    // Collecter les données une seule fois
-                    var rawData = CollectData();
+                    // Collecter les données
+                    //var rawData = CollectData();
 
                     // Appeler la méthode de génération de rapport avec les données nécessaires
-                    ReportGenerator.GenerateDataReport(
+                    /*ReportGenerator.GenerateDataReport(
                         rawData["Personnages"] as ObservableCollection<Personnage>,
                         (bool)rawData["MC_GlobalStatus"],
                         rawData["MC_Shortcut"].ToString(),
@@ -449,13 +450,7 @@ namespace Optimizer
                         (bool)rawData["ET_GlobalStatus"],
                         rawData["ET_Leader"],
                         rawData["ET_TchatPos"].ToString()
-                    );
-
-                    // Convertir les données pour AHK v2
-                    var ahkData = AhkConverter.ConvertToAhkData(rawData);
-
-                    // Générer le script AHK
-                    ScriptGenerator.GenerateAhkScript(ahkData);
+                    );*/
                 }
             }
             catch (Exception ex)
@@ -722,26 +717,34 @@ namespace Optimizer
         }
 
 
+// === PARTIE GESTION DES SCRIPTS === //
+
+        // Récupération des données
         private Dictionary<string, object> CollectData()
         {
             // Récupérer le ViewModel actuel
             if (this.DataContext is CharactersViewModel viewModel)
             {
+                // Déterminer les valeurs de DelayMin et DelayMax
+                int mcMinDelay = ChkBox_MC_Delays.IsChecked == true
+                    ? int.Parse(TxtBox_MC_MinDelay.Text.Replace("ms", ""))
+                    : 0;
+
+                int mcMaxDelay = ChkBox_MC_Delays.IsChecked == true
+                    ? int.Parse(TxtBox_MC_MaxDelay.Text.Replace("ms", ""))
+                    : 0;
+
                 return new Dictionary<string, object>
         {
             { "Personnages", viewModel.Personnages },
             { "MC_GlobalStatus", TglBtn_MC_GlobalStatus.IsChecked },
             { "MC_Shortcut", Btn_MC_Shortcut.Content.ToString() },
             { "MC_Delays", ChkBox_MC_Delays.IsChecked },
-            { "MC_MinDelay", TxtBox_MC_MinDelay.Text.Replace("ms", "") },
-            { "MC_MaxDelay", TxtBox_MC_MaxDelay.Text.Replace("ms", "") },
-            { "MC_Layout", CboBox_MC_Layout.SelectedItem?.ToString() },
-            {
-                "ActiveWindows",
-                viewModel.Personnages != null && viewModel.Personnages.Any()
-                    ? viewModel.Personnages.Where(p => p.MouseClone).Select(p => p.WindowName).ToHashSet()
-                    : new HashSet<string>() // Initialisation explicite d'un ensemble vide
-            },            { "HC_GlobalStatus", TglBtn_HC_GlobalStatus.IsChecked },
+            { "MC_MinDelay", mcMinDelay }, // Valeur conditionnelle
+            { "MC_MaxDelay", mcMaxDelay }, // Valeur conditionnelle
+            { "MC_Layout", CboBox_MC_Layout.SelectedItem is ComboBoxItem selectedItem ? selectedItem.Content.ToString() : null },
+            { "ActiveWindows", viewModel.Personnages != null && viewModel.Personnages.Any() ? viewModel.Personnages.Where(p => p.MouseClone).Select(p => p.WindowName).ToHashSet() : new HashSet<string>() },
+            { "HC_GlobalStatus", TglBtn_HC_GlobalStatus.IsChecked },
             { "HC_Shortcut", Btn_HC_Shortcut.Content.ToString() },
             { "HC_Delays", ChkBox_HC_Delays.IsChecked },
             { "HC_MinDelay", TxtBox_HC_MinDelay.Text.Replace("ms", "") },
@@ -759,5 +762,110 @@ namespace Optimizer
             }
         }
 
+        private Process _mcProcess;
+        private Process _hcProcess;
+        private Process _wsProcess;
+        private Process _etProcess;
+
+        private void TglBtn_MC_GlobalStatus_Checked(object sender, RoutedEventArgs e)
+        {
+            ScriptGenerator.Generate_MC_Script();
+            StartScript("MC", ref _mcProcess);
+        }
+
+        private void TglBtn_MC_GlobalStatus_Unchecked(object sender, RoutedEventArgs e)
+        {
+            StopScript(ref _mcProcess);
+        }
+
+        private void TglBtn_HC_GlobalStatus_Checked(object sender, RoutedEventArgs e)
+        {
+            ScriptGenerator.Generate_HC_Script();
+            StartScript("HC", ref _hcProcess);
+        }
+
+        private void TglBtn_HC_GlobalStatus_Unchecked(object sender, RoutedEventArgs e)
+        {
+            StopScript(ref _hcProcess);
+        }
+
+        private void TglBtn_WS_GlobalStatus_Checked(object sender, RoutedEventArgs e)
+        {
+            ScriptGenerator.Generate_WS_Script();
+            StartScript("WS", ref _wsProcess);
+        }
+
+        private void TglBtn_WS_GlobalStatus_Unchecked(object sender, RoutedEventArgs e)
+        {
+            StopScript(ref _wsProcess);
+        }
+
+        private void TglBtn_ET_GlobalStatus_Checked(object sender, RoutedEventArgs e)
+        {
+            ScriptGenerator.Generate_ET_Script();
+            StartScript("ET", ref _etProcess);
+        }
+
+        private void TglBtn_ET_GlobalStatus_Unchecked(object sender, RoutedEventArgs e)
+        {
+            StopScript(ref _etProcess);
+        }
+
+        private void StartScript(string scriptName, ref Process process)
+        {
+            // Arrêter le script actuel s'il est déjà en cours d'exécution
+            StopScript(ref process);
+
+            // Chemin du fichier script
+            string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{scriptName}-Temp.ahk");
+
+            // Vérifier si le fichier script existe
+            if (!File.Exists(scriptPath))
+            {
+                System.Windows.MessageBox.Show($"Le fichier {scriptPath} n'existe pas.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            // Chemin relatif vers AutoHotkey64.exe
+            string ahkExePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Services", "AutoHotkey64.exe");
+
+            // Vérifier si AutoHotkey64.exe existe
+            if (!File.Exists(ahkExePath))
+            {
+                System.Windows.MessageBox.Show($"AutoHotkey64.exe n'a pas été trouvé à l'emplacement : {ahkExePath}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            // Exécuter le script AutoHotkey
+            try
+            {
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = ahkExePath,
+                    Arguments = $"\"{scriptPath}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                process = Process.Start(startInfo);
+                Console.WriteLine($"{scriptName} activé !");
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Erreur lors de l'exécution d'AutoHotkey : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void StopScript(ref Process process)
+        {
+            // Arrêter le processus AHK
+            if (process != null && !process.HasExited)
+            {
+                process.Kill();
+                process.Dispose();
+                process = null;
+                Console.WriteLine("Script désactivé !");
+            }
+        }
     }
 }

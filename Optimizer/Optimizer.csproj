@@ -17,11 +17,18 @@
     <Content Include="Assets\optimizer_icon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Services\AutoHotkey64.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
 
     <!-- Eléments graphiques -->
     <Resource Include="Assets\Sources\*.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Services\AutoHotkey64.exe" />
   </ItemGroup>
 
   <ItemGroup>
