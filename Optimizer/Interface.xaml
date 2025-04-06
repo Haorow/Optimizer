@@ -17,8 +17,8 @@
         d:HorizontalAlignment="Center"
         d:VerticalAlignment="Center"
         Width="400"
-        Height="680">
-    <!-- Height pour le dev : 390 (replié) ou 680 (déplié) -->
+        Height="650">
+    <!-- Height pour le dev : 390 (replié) ou 650 (déplié) -->
 
 
     <Window.Resources>
@@ -195,6 +195,10 @@
                 <!-- Cliqué (Pressed) -->
                 <Trigger Property="IsPressed" Value="True">
                     <Setter Property="Background" Value="#369936"/>
+                </Trigger>
+                <!-- Désactivé -->
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#FF303030"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -628,8 +632,8 @@
     <Border MouseDown="ClearFocus_MouseDown" Background="#FF252525" CornerRadius="10" BorderThickness="0">
 
         <!-- INTERFACE GENERALE -->
-        <Grid Width="400" Height="680" Background="#00FFFFFF">
-            <StackPanel Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="400" Height="680" Orientation="Vertical">
+        <Grid x:Name="UIInterface" Width="400" Height="650" Background="#00FFFFFF" Focusable="True">
+            <StackPanel Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="400" Height="650" Orientation="Vertical">
 
                 <!-- BARRE DE TITRE -->
                 <Grid x:Name="TitleBar" Height="30" Background="Transparent" MouseDown="StackPanel_MouseDown">
@@ -732,7 +736,7 @@
                         <DataGridTemplateColumn Header="MC" Width="45">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ToggleButton x:Name="TglBtn_MC_WindowStatus" IsChecked="{Binding MouseClone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}" Content=""/>
+                                    <ToggleButton x:Name="TglBtn_MC_WindowStatus" IsChecked="{Binding MouseClone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}" Content="" Checked="TglBtn_MC_WindowStatus_Checked" Unchecked="TglBtn_MC_WindowStatus_Unchecked"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -740,7 +744,7 @@
                         <DataGridTemplateColumn Header="HC" Width="45">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ToggleButton x:Name="TglBtn_HC_WindowStatus" IsChecked="{Binding HotkeyClone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}" Content=""/>
+                                    <ToggleButton x:Name="TglBtn_HC_WindowStatus" IsChecked="{Binding HotkeyClone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}" Content="" Checked="TglBtn_HC_WindowStatus_Checked" Unchecked="TglBtn_HC_WindowStatus_Unchecked"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -748,7 +752,7 @@
                         <DataGridTemplateColumn Header="WS" Width="45">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ToggleButton x:Name="TglBtn_WS_WindowStatus" IsChecked="{Binding WindowSwitcher, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}" Content=""/>
+                                    <ToggleButton x:Name="TglBtn_WS_WindowStatus" IsChecked="{Binding WindowSwitcher, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}" Content="" Checked="TglBtn_WS_WindowStatus_Checked" Unchecked="TglBtn_WS_WindowStatus_Unchecked"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -756,7 +760,7 @@
                         <DataGridTemplateColumn Header="ET" Width="45">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ToggleButton x:Name="TglBtn_ET_WindowStatus" IsChecked="{Binding EasyTeam, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}" Content=""/>
+                                    <ToggleButton x:Name="TglBtn_ET_WindowStatus" IsChecked="{Binding EasyTeam, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}" Content="" Checked="TglBtn_ET_WindowStatus_Checked" Unchecked="TglBtn_ET_WindowStatus_Unchecked"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -774,7 +778,7 @@
                     </Button>
 
                     <!-- BOUTON EASYTEAM -->
-                    <Button x:Name="Btn_EasyTeam" Style="{StaticResource Button_Control}" Margin="2.5,0,5,0">
+                    <Button x:Name="Btn_EasyTeam" Style="{StaticResource Button_Control}" Margin="2.5,0,5,0" Click="BtnEasyTeam_Click">
                         <Button.Content>
                             <Image Source="/Optimizer;component/Assets/Sources/easyteam.png" Stretch="Uniform" Height="15"/>
                         </Button.Content>
@@ -790,7 +794,7 @@
                 </ToggleButton>
 
                 <!-- INTERFACE PARAMETRES -->
-                <StackPanel Orientation="Vertical" Height="290">
+                <StackPanel Orientation="Vertical" Height="260">
 
                     <!-- MOUSE CLONE -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
@@ -802,7 +806,7 @@
                     <!-- MOUSE CLONE - DELAIS -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
                         <TextBlock x:Name="TxtBloc_MC_DelaysLabelSettings" Style="{StaticResource SubLabelSettings}" Text="Délais de déclenchement"/>
-                        <CheckBox x:Name="ChkBox_MC_Delays" Style="{StaticResource RoundedCheckBox}" IsChecked="True"/>
+                        <CheckBox x:Name="ChkBox_MC_Delays" Style="{StaticResource RoundedCheckBox}" IsChecked="True" Checked="ChkBox_Delays_Checked" Unchecked="ChkBox_Delays_Unchecked"/>
                         <TextBox x:Name="TxtBox_MC_MinDelay" Style="{StaticResource TextBoxDelays}" Text="50ms" Margin="5,0,2.5,0" IsEnabled="{Binding IsChecked, ElementName=ChkBox_MC_Delays}" PreviewMouseDown="TextBox_PreviewMouseDown" LostKeyboardFocus="TextBox_LostKeyboardFocus" KeyUp="TextBox_KeyUp" PreviewTextInput="NumberValidation_PreviewTextInput" DataObject.Pasting="NumberValidation_Pasting"/>
                         <TextBlock Style="{StaticResource TxtBloc_Separator}" Text="à" IsEnabled="{Binding IsChecked, ElementName=ChkBox_MC_Delays}"/>
                         <TextBox x:Name="TxtBox_MC_MaxDelay" Style="{StaticResource TextBoxDelays}" Text="125ms" Margin="2.5,0,0,0" IsEnabled="{Binding IsChecked, ElementName=ChkBox_MC_Delays}" PreviewMouseDown="TextBox_PreviewMouseDown" LostKeyboardFocus="TextBox_LostKeyboardFocus" KeyUp="TextBox_KeyUp" PreviewTextInput="NumberValidation_PreviewTextInput" DataObject.Pasting="NumberValidation_Pasting"/>
@@ -811,7 +815,7 @@
                     <!-- MOUSE CLONE - REPLICATION DU CLIC -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
                         <TextBlock x:Name="TxtBloc_MC_LayoutLabelSettings" Style="{StaticResource SubLabelSettings}" Text="Gestion des fenêtres au clic"/>
-                        <ComboBox x:Name="CboBox_MC_Layout" Style="{StaticResource FlatComboBoxStyle}">
+                        <ComboBox x:Name="CboBox_MC_Layout" Style="{StaticResource FlatComboBoxStyle}" SelectionChanged="CboBox_MC_Layout_SelectionChanged">
                             <ComboBoxItem Content="Fenêtre unique"/>
                             <ComboBoxItem Content="Fenêtres individuelles"/>
                         </ComboBox>
@@ -827,7 +831,7 @@
                     <!-- HOTKEY CLONE - DELAIS -->
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
                         <TextBlock x:Name="TxtBloc_HC_DelaysLabelSettings"  Style="{StaticResource SubLabelSettings}" Text="Délais de déclenchement"/>
-                        <CheckBox x:Name="ChkBox_HC_Delays" Style="{StaticResource RoundedCheckBox}" IsChecked="True"/>
+                        <CheckBox x:Name="ChkBox_HC_Delays" Style="{StaticResource RoundedCheckBox}" IsChecked="True" Checked="ChkBox_Delays_Checked" Unchecked="ChkBox_Delays_Unchecked"/>
                         <TextBox x:Name="TxtBox_HC_MinDelay" Style="{StaticResource TextBoxDelays}" Text="50ms" Margin="5,0,2.5,0" IsEnabled="{Binding IsChecked, ElementName=ChkBox_HC_Delays}" PreviewMouseDown="TextBox_PreviewMouseDown" LostKeyboardFocus="TextBox_LostKeyboardFocus" KeyUp="TextBox_KeyUp" PreviewTextInput="NumberValidation_PreviewTextInput" DataObject.Pasting="NumberValidation_Pasting"/>
                         <TextBlock Style="{StaticResource TxtBloc_Separator}" Text="à" IsEnabled="{Binding IsChecked, ElementName=ChkBox_HC_Delays}"/>
                         <TextBox x:Name="TxtBox_HC_MaxDelay" Style="{StaticResource TextBoxDelays}" Text="125ms" Margin="2.5,0,0,0" IsEnabled="{Binding IsChecked, ElementName=ChkBox_HC_Delays}" PreviewMouseDown="TextBox_PreviewMouseDown" LostKeyboardFocus="TextBox_LostKeyboardFocus" KeyUp="TextBox_KeyUp" PreviewTextInput="NumberValidation_PreviewTextInput" DataObject.Pasting="NumberValidation_Pasting"/>
@@ -845,12 +849,6 @@
                         <ToggleButton x:Name="TglBtn_ET_GlobalStatus" Style="{StaticResource SwitchToggleButton}" Content="" Margin="10,0,0,0" Checked="TglBtn_ET_GlobalStatus_Checked" Unchecked="TglBtn_ET_GlobalStatus_Unchecked"/>
                         <TextBlock x:Name="TxtBloc_ET_LabelSettings" Style="{StaticResource LabelSettings}" Text="Easy Team"/>
                         <ComboBox x:Name="CboBox_ET_Leader" Style="{StaticResource FlatComboBoxStyle}" ItemsSource="{Binding LeaderOptions}" DisplayMemberPath="DisplayName" SelectedValuePath="Value" SelectedValue="{Binding SelectedLeader}" SelectionChanged="CboBox_ET_Leader_SelectionChanged"/>
-                    </StackPanel>
-
-                    <!-- EASY TEAM - POSITION DU TCHAT -->
-                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
-                        <TextBlock x:Name="TxtBloc_ET_TchatPosLabelSettings"  Style="{StaticResource SubLabelSettings}" Text="Position du tchat"/>
-                        <Button x:Name="Btn_ET_TchatPos" Style="{StaticResource Button_Shortcuts}" Content="Définir la position du tchat"/>
                     </StackPanel>
 
                 </StackPanel>

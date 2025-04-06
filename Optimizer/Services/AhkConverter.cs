@@ -17,22 +17,38 @@ namespace Optimizer
             var personnages = rawData["Personnages"] as ObservableCollection<Personnage>;
             ahkData.WindowTitles = personnages.Select(p => p.WindowName).ToArray();
 
-            // Initialiser ActiveWindows
-            ahkData.ActiveWindows = rawData.ContainsKey("ActiveWindows") && rawData["ActiveWindows"] is HashSet<string> activeWindows
-                ? activeWindows
-                : new HashSet<string>(); // Initialisation explicite d'un ensemble vide
+            // Initialiser ActiveWindows_MC pour Mouse Clone
+            ahkData.ActiveWindows_MC = rawData.ContainsKey("ActiveWindows_MC") && rawData["ActiveWindows_MC"] is HashSet<string> activeWindows_MC
+                ? activeWindows_MC
+                : new HashSet<string>();
+
+            // Initialiser ActiveWindows_HC pour Hotkey Clone
+            ahkData.ActiveWindows_HC = rawData.ContainsKey("ActiveWindows_HC") && rawData["ActiveWindows_HC"] is HashSet<string> activeWindows_HC
+                ? activeWindows_HC
+                : new HashSet<string>();
+
+            // Initialiser ActiveWindows_WS pour Window Switcher
+            ahkData.ActiveWindows_WS = rawData.ContainsKey("ActiveWindows_WS") && rawData["ActiveWindows_WS"] is HashSet<string> activeWindows_WS
+                ? activeWindows_WS
+                : new HashSet<string>();
+
+            // Initialiser ActiveWindows_ET pour Easy Team
+            ahkData.ActiveWindows_ET = rawData.ContainsKey("ActiveWindows_ET") && rawData["ActiveWindows_ET"] is HashSet<string> activeWindows_ET
+                ? activeWindows_ET
+                : new HashSet<string>();
 
             // Mouse Clone
             ahkData.MouseCloneEnabled = (bool)rawData["MC_GlobalStatus"];
             ahkData.MouseCloneShortcut = FormatShortcut(rawData["MC_Shortcut"].ToString());
+            ahkData.MouseCloneDelays = (bool)rawData["MC_Delays"];
             ahkData.MouseCloneMinDelay = int.Parse(rawData["MC_MinDelay"].ToString().Replace("ms", ""));
             ahkData.MouseCloneMaxDelay = int.Parse(rawData["MC_MaxDelay"].ToString().Replace("ms", ""));
             ahkData.MouseCloneLayout = ConvertLayout(rawData["MC_Layout"]?.ToString());
 
-
             // Hotkey Clone
             ahkData.HotkeyCloneEnabled = (bool)rawData["HC_GlobalStatus"];
             ahkData.HotkeyCloneShortcut = FormatShortcut(rawData["HC_Shortcut"].ToString());
+            ahkData.HotkeyCloneDelays = (bool)rawData["HC_Delays"];
             ahkData.HotkeyCloneMinDelay = int.Parse(rawData["HC_MinDelay"].ToString().Replace("ms", ""));
             ahkData.HotkeyCloneMaxDelay = int.Parse(rawData["HC_MaxDelay"].ToString().Replace("ms", ""));
 
@@ -41,16 +57,22 @@ namespace Optimizer
             ahkData.WindowSwitcherShortcut = FormatShortcut(rawData["WS_Shortcut"].ToString());
 
             // Easy Team
-            ahkData.EasyTeamEnabled = (bool)rawData["ET_GlobalStatus"];
-            ahkData.EasyTeamLeader = ConvertLeader(rawData["ET_Leader"]?.ToString());
-            ahkData.EasyTeamTchatPos = ConvertTchatPosition(rawData["ET_TchatPos"]?.ToString());
+            if ((bool)rawData["ET_GlobalStatus"])
+            {
+                ahkData.EasyTeamEnabled = true;
+
+                // Récupérer le titre de la fenêtre du chef d'équipe
+                ahkData.EasyTeamLeaderWindow = rawData["ET_Leader"] as string;
+            }
+            else
+            {
+                ahkData.EasyTeamEnabled = false; // Désactiver Easy Team si non activé
+            }
 
             return ahkData;
         }
 
-        /// <summary>
-        /// Formate un raccourci pour AHK v2.
-        /// </summary>
+        // Formate un raccourci pour AHK v2.
         private static string FormatShortcut(string shortcut)
         {
             var keyMap = new Dictionary<string, string>
@@ -73,9 +95,7 @@ namespace Optimizer
             return shortcut;
         }
 
-        /// <summary>
-        /// Convertit la position du curseur pour AHK v2.
-        /// </summary>
+        // Convertit la position du curseur pour AHK v2.
         private static string ConvertLayout(string layout)
         {
             return layout switch
@@ -85,48 +105,34 @@ namespace Optimizer
                 _ => "SingleWindow" // Valeur par défaut
             };
         }
-
-        /// <summary>
-        /// Convertit le leader sélectionné pour AHK v2.
-        /// </summary>
-        private static string ConvertLeader(string leader)
-        {
-            return leader == "Définir un chef d'équipe" ? null : leader;
-        }
-
-        /// <summary>
-        /// Convertit la position du tchat pour AHK v2.
-        /// </summary>
-        private static (int X, int Y) ConvertTchatPosition(string tchatPos)
-        {
-            return tchatPos == "Définir la position du tchat" ? (0, 0) : (0, 0); // Valeurs par défaut
-        }
     }
 
-    /// <summary>
-    /// Classe pour stocker les données converties pour AHK v2.
-    /// </summary>
+    // Classe pour stocker les données converties pour AHK v2.
     public class AhkData
     {
         public string[] WindowTitles { get; set; }
-        public HashSet<string> ActiveWindows { get; set; }
 
         public bool MouseCloneEnabled { get; set; }
         public string MouseCloneShortcut { get; set; }
+        public bool MouseCloneDelays { get; set; }
         public int MouseCloneMinDelay { get; set; }
         public int MouseCloneMaxDelay { get; set; }
         public string MouseCloneLayout { get; set; }
+        public HashSet<string> ActiveWindows_MC { get; set; }
 
         public bool HotkeyCloneEnabled { get; set; }
         public string HotkeyCloneShortcut { get; set; }
+        public bool HotkeyCloneDelays { get; set; }
         public int HotkeyCloneMinDelay { get; set; }
         public int HotkeyCloneMaxDelay { get; set; }
+        public HashSet<string> ActiveWindows_HC { get; set; }
 
         public bool WindowSwitcherEnabled { get; set; }
         public string WindowSwitcherShortcut { get; set; }
+        public HashSet<string> ActiveWindows_WS { get; set; }
 
         public bool EasyTeamEnabled { get; set; }
-        public string EasyTeamLeader { get; set; }
-        public (int X, int Y) EasyTeamTchatPos { get; set; }
+        public string EasyTeamLeaderWindow { get; set; }
+        public HashSet<string> ActiveWindows_ET { get; set; }
     }
 }

@@ -8,8 +8,10 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using Hardcodet.Wpf.TaskbarNotification;
+using Optimizer.Services;
 
 public static class WindowHelper
 {
@@ -57,19 +59,29 @@ namespace Optimizer
         private System.Windows.Controls.Button _currentErrorButton;
         private Dictionary<System.Windows.Controls.TextBox, System.Windows.Controls.TextBox> _minMaxPairs;
         private TaskbarIcon taskbarIcon;
+        private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
+        private LowLevelMouseProc _mouseHook;
+        private IntPtr _hookID = IntPtr.Zero;
+        private bool _isWaitingForClick = false;
 
         // Ajoute cette classe imbriquée
         public class LeaderOption
         {
-            public string DisplayName { get; set; }
-            public Personnage Value { get; set; }
+            public string DisplayName { get; set; } // Texte affiché dans la ComboBox
+            public Personnage Value { get; set; }   // Objet Personnage associé
+
+            public override string ToString()
+            {
+                return DisplayName; // Afficher le nom dans la ComboBox
+            }
         }
 
         // METHODE : CHARGEMENT DE LA FENETRE ET DE LA LISTE
         public Interface()
         {
             InitializeComponent();
-            this.DataContext = new CharactersViewModel();
+            InitializeGlobalStatusButtons();
+            this.DataContext = new Optimizer.Services.CharactersViewModel();
 
             // Centrer la fenêtre au démarrage
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -78,7 +90,7 @@ namespace Optimizer
             this.Loaded += (s, e) =>
             {
                 // Décalage vers le haut pour centrer l'application lorsque le menu Paramètres est déplié
-                double offsetY = 145;
+                double offsetY = 130;
                 this.Top -= offsetY;
             };
 
@@ -125,9 +137,6 @@ namespace Optimizer
                     _errorTimer.Stop();
                 }
             };
-
-            // Forcer la désactivation initiale du bouton de position du tchat
-            Btn_ET_TchatPos.IsEnabled = false;
         }
 
         // TRAYICON (BOUTON MASQUER) : GESTION DU MENU CONTEXTUEL
@@ -188,14 +197,18 @@ namespace Optimizer
         // BOUTON FERMER : FERMER L'APPLICATION
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
+            StopScript(ref _mcProcess);
+            StopScript(ref _hcProcess);
+            StopScript(ref _wsProcess);
+            StopScript(ref _etProcess);
             System.Windows.Application.Current.Shutdown();
         }
 
         // BOUTON PARAMETRES : DEPLOIEMENT DU PANNEAU DE CONFIGURATION
         private void ToggleButton_Checked(object sender, RoutedEventArgs e)
         {
-            // Agrandir la fenêtre à 680 quand le bouton est coché
-            this.Height = 680;
+            // Agrandir la fenêtre à 650 quand le bouton est coché
+            this.Height = 650;
         }
 
         // BOUTON PARAMETRES : REPLI DU PANNEAU DE CONFIGURATION
@@ -205,199 +218,13 @@ namespace Optimizer
             this.Height = 390;
         }
 
-        // DATAGRID : GESTION ET AFFICHAGE DES DONNEES
-        public class CharactersViewModel : INotifyPropertyChanged
-        {
-            // Collection observable des personnages (liée à la DataGrid)
-            public ObservableCollection<Personnage> Personnages { get; set; }
-
-            // Option par défaut pour la ComboBox des leaders
-            private static readonly LeaderOption _defaultLeaderOption = new LeaderOption
-            {
-                DisplayName = "Définir un chef d'équipe",
-                Value = null
-            };
-
-            // Initialise les personnages (chargé ou vide)
-            public CharactersViewModel()
-            {
-                Personnages = new ObservableCollection<Personnage>();
-                LoadWindows();
-            }
-
-            // Événement de notification de changement de propriété
-            public event PropertyChangedEventHandler PropertyChanged;
-
-            // Méthode utilitaire pour déclencher les notifications
-            protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }
-
-            // Méthode principale de chargement des fenêtres
-            public void LoadWindows()
-            {
-                // Sauvegarde de l'identifiant unique
-                string previousLeaderName = SelectedLeader?.CharacterName;
-
-                // Sauvegarder la sélection actuelle
-                bool wasDefaultSelected = SelectedLeader == null;
-
-                // 1. Sauvegarder la sélection actuelle
-                string selectedLeaderName = SelectedLeader?.CharacterName;
-
-                var windows = WindowHelper.GetWindows();
-                var filteredWindows = windows.Where(w => w.Title.Contains("- Release")).ToList();
-
-                // Mettre à jour les fenêtres existantes ou en ajouter de nouvelles
-                foreach (var window in filteredWindows)
-                {
-                    var characterName = ExtractCharacterName(window.Title);
-                    var existingPersonnage = Personnages.FirstOrDefault(p => p.CharacterName == characterName);
-
-                    if (existingPersonnage == null)
-                    {
-                        // Ajouter un nouveau personnage si non existant
-                        Personnages.Add(new Personnage
-                        {
-                            Handle = window.Handle,
-                            WindowName = window.Title,
-                            CharacterName = characterName,
-                            MouseClone = false,
-                            HotkeyClone = false,
-                            WindowSwitcher = false,
-                            EasyTeam = false
-                        });
-                    }
-                    else
-                    {
-                        // Mettre à jour les propriétés nécessaires pour les fenêtres existantes
-                        existingPersonnage.WindowName = window.Title;
-                        existingPersonnage.Handle = window.Handle;
-                    }
-                }
-
-                // Supprimer les personnages qui ne sont plus dans les fenêtres actuelles
-                var characterNames = filteredWindows.Select(w => ExtractCharacterName(w.Title)).ToHashSet();
-                for (int i = Personnages.Count - 1; i >= 0; i--)
-                {
-                    if (!characterNames.Contains(Personnages[i].CharacterName))
-                    {
-                        Personnages.RemoveAt(i);
-                    }
-                }
-
-                // Restauration de la sélection du Leader précédent
-                if (!string.IsNullOrEmpty(previousLeaderName))
-                {
-                    SelectedLeader = Personnages.FirstOrDefault(p => p.CharacterName == previousLeaderName);
-                }
-
-                // Mise à jour des ordres
-                UpdateOrder();
-                // Mise à jour des options de leader
-                UpdateLeaderOptions();
-
-                if (wasDefaultSelected)
-                {
-                    SelectedLeader = null; // Force la sélection sur l'option par défaut
-                }
-                else if (!string.IsNullOrEmpty(selectedLeaderName))
-                {
-                    SelectedLeader = Personnages.FirstOrDefault(p => p.CharacterName == selectedLeaderName);
-                }
-            }
-
-            // Récupération du nom du personnage
-            private string ExtractCharacterName(string windowName)
-            {
-                // Extraire le texte avant le premier espace
-                var parts = windowName.Split(' ');
-                return parts.Length > 0 ? parts[0] : windowName;
-            }
-
-            // Déplacement vers le haut du personnage dans la liste
-            public void MoveUp(Personnage personnage)
-            {
-                int index = Personnages.IndexOf(personnage);
-                if (index > 0)
-                {
-                    Personnages.Move(index, index - 1);
-                    UpdateOrder();
-                }
-            }
-
-            // Déplacement vers le bas du personnage dans la liste
-            public void MoveDown(Personnage personnage)
-            {
-                int index = Personnages.IndexOf(personnage);
-                if (index < Personnages.Count - 1)
-                {
-                    Personnages.Move(index, index + 1);
-                    UpdateOrder();
-                }
-            }
-
-            // Mise à jour de l'ordre des personnages dans la liste
-            private void UpdateOrder()
-            {
-                int order = 1;
-                foreach (var personnage in Personnages)
-                {
-                    personnage.Order = order++;
-                }
-            }
-
-            // Gestion du Leader
-            private ObservableCollection<LeaderOption> _leaderOptions = new ObservableCollection<LeaderOption>();
-            public ObservableCollection<LeaderOption> LeaderOptions
-            {
-                get => _leaderOptions;
-                set
-                {
-                    _leaderOptions = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LeaderOptions)));
-                }
-            }
-
-            // Sélection du Leader
-            private Personnage _selectedLeader;
-            public Personnage SelectedLeader
-            {
-                get => _selectedLeader;
-                set
-                {
-                    _selectedLeader = value;
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(LeaderOptions)); // Force la mise à jour de la ComboBox
-                }
-            }
-
-            // Mise à jour des options du Leader
-            private void UpdateLeaderOptions()
-            {
-                var newOptions = new ObservableCollection<LeaderOption> { _defaultLeaderOption };
-
-                foreach (var personnage in Personnages)
-                {
-                    newOptions.Add(new LeaderOption
-                    {
-                        DisplayName = personnage.CharacterName,
-                        Value = personnage
-                    });
-                }
-
-                LeaderOptions = newOptions;
-            }
-        }
-
         // BOUTON DE DEPLACEMENT VERS LE HAUT : DEPLACER VERS LE HAUT
         private void MoveUp_Click(object sender, RoutedEventArgs e)
         {
             if (sender is System.Windows.Controls.Button button && button.DataContext is Personnage personnage)
             {
                 // Récupérer le ViewModel
-                if (this.DataContext is Interface.CharactersViewModel viewModel)
+                if (this.DataContext is Optimizer.Services.CharactersViewModel viewModel)
                 {
                     viewModel.MoveUp(personnage);
                 }
@@ -410,10 +237,209 @@ namespace Optimizer
             if (sender is System.Windows.Controls.Button button && button.DataContext is Personnage personnage)
             {
                 // Récupérer le ViewModel
-                if (this.DataContext is Interface.CharactersViewModel viewModel)
+                if (this.DataContext is Optimizer.Services.CharactersViewModel viewModel)
                 {
                     viewModel.MoveDown(personnage);
                 }
+            }
+        }
+
+        // TOGGLE BUTTONS _WINDOWSTATUS : VERIFIER LE NOMBRE DE FENETRES ACTIVES POUR UNE FONCTIONNALITE
+        private int CountActiveWindowsForFeature(Func<Personnage, bool> featureSelector)
+        {
+            if (this.DataContext is CharactersViewModel viewModel && viewModel.Personnages != null)
+            {
+                return viewModel.Personnages.Count(p => featureSelector(p));
+            }
+            return 0;
+        }
+
+        // TOGGLE BUTTONS _GLOBALSTATUS : ACTIVATION/DESACTIVATION SELON LE NOMBRE DE TOGGLE BUTTONS _WINDOWSTATUS ACTIFS POUR UNE FONCTIONNALITE
+        private void UpdateGlobalStatusButtons()
+        {
+            // Mouse Clone
+            int activeMCWindows = CountActiveWindowsForFeature(p => p.MouseClone);
+            TglBtn_MC_GlobalStatus.IsEnabled = activeMCWindows >= 2;
+            if (activeMCWindows < 2 && TglBtn_MC_GlobalStatus.IsChecked == true)
+            {
+                TglBtn_MC_GlobalStatus.IsChecked = false; // Réinitialiser à Unchecked
+            }
+
+            // Hotkey Clone
+            int activeHCWindows = CountActiveWindowsForFeature(p => p.HotkeyClone);
+            TglBtn_HC_GlobalStatus.IsEnabled = activeHCWindows >= 2;
+            if (activeHCWindows < 2 && TglBtn_HC_GlobalStatus.IsChecked == true)
+            {
+                TglBtn_HC_GlobalStatus.IsChecked = false; // Réinitialiser à Unchecked
+            }
+
+            // Window Switcher
+            int activeWSWindows = CountActiveWindowsForFeature(p => p.WindowSwitcher);
+            TglBtn_WS_GlobalStatus.IsEnabled = activeWSWindows >= 2;
+            if (activeWSWindows < 2 && TglBtn_WS_GlobalStatus.IsChecked == true)
+            {
+                TglBtn_WS_GlobalStatus.IsChecked = false; // Réinitialiser à Unchecked
+            }
+
+            // Easy Team
+            if (this.DataContext is CharactersViewModel viewModel)
+            {
+                // Compter le nombre de fenêtres actives (EasyTeam activé)
+                int activeWindowsCount = viewModel.Personnages.Count(p => p.EasyTeam);
+
+                // Activer CboBox_ET_Leader si au moins deux fenêtres sont actives
+                CboBox_ET_Leader.IsEnabled = activeWindowsCount >= 2;
+
+                // Activer TglBtn_ET_GlobalStatus uniquement si :
+                // - Au moins deux fenêtres sont actives
+                // - Une option valide est sélectionnée dans CboBox_ET_Leader
+                TglBtn_ET_GlobalStatus.IsEnabled = activeWindowsCount >= 2 &&
+                                                   CboBox_ET_Leader.SelectedItem is LeaderOption selectedOption &&
+                                                   selectedOption.Value != null;
+
+                // Désactiver TglBtn_ET_GlobalStatus si les conditions ne sont pas remplies
+                if (activeWindowsCount < 2 ||
+                    CboBox_ET_Leader.SelectedItem is LeaderOption selected && selected.Value == null)
+                {
+                    TglBtn_ET_GlobalStatus.IsChecked = false; // Réinitialiser à Unchecked
+                }
+            }
+        }
+
+        // TOGGLE BUTTONS _GLOBALSTATUS : INITIALISER L'ETAT DES TOGGLE BUTTONS _GLOBALSTATUS
+        private void InitializeGlobalStatusButtons()
+        {
+            Btn_EasyTeam.IsEnabled = false;
+            UpdateGlobalStatusButtons();
+        }
+
+        // TOGGLE BUTTON MC_WINDOWSTATUS : MET A JOUR LA LISTE DES FENETRES ACTIVES POUR UNE FONCTIONNALITE A L'ACTIVATION
+        private void TglBtn_MC_WindowStatus_Checked(object sender, RoutedEventArgs e)
+        {
+            UpdateGlobalStatusButtons();
+            // Mettre à jour le script Mouse Clone si nécessaire
+            UpdateScriptIfNeeded(
+                "MouseClone",
+                ref _mcProcess,
+                () => TglBtn_MC_GlobalStatus.IsChecked == true,
+                () =>
+                {
+                    var rawData = CollectData();
+                    var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                    ScriptGenerator.Generate_MC_Script(ahkData);
+                });
+        }
+
+        // TOGGLE BUTTON MC_WINDOWSTATUS : MET A JOUR LA LISTE DES FENETRES ACTIVES POUR UNE FONCTIONNALITE A LA DESACTIVATION
+        private void TglBtn_MC_WindowStatus_Unchecked(object sender, RoutedEventArgs e)
+        {
+            UpdateGlobalStatusButtons();
+            // Mettre à jour le script Mouse Clone si nécessaire
+            UpdateScriptIfNeeded(
+                "MouseClone",
+                ref _mcProcess,
+                () => TglBtn_MC_GlobalStatus.IsChecked == true,
+                () =>
+                {
+                    var rawData = CollectData();
+                    var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                    ScriptGenerator.Generate_MC_Script(ahkData);
+                });
+        }
+
+        // TOGGLE BUTTON HC_WINDOWSTATUS : MET A JOUR LA LISTE DES FENETRES ACTIVES POUR UNE FONCTIONNALITE A L'ACTIVATION
+        private void TglBtn_HC_WindowStatus_Checked(object sender, RoutedEventArgs e)
+        {
+            UpdateGlobalStatusButtons();
+            // Mettre à jour le script Mouse Clone si nécessaire
+            UpdateScriptIfNeeded(
+                "HotkeyClone",
+                ref _hcProcess,
+                () => TglBtn_HC_GlobalStatus.IsChecked == true,
+                () =>
+                {
+                    var rawData = CollectData();
+                    var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                    ScriptGenerator.Generate_HC_Script(ahkData);
+                });
+        }
+
+        // TOGGLE BUTTON HC_WINDOWSTATUS : MET A JOUR LA LISTE DES FENETRES ACTIVES POUR UNE FONCTIONNALITE A LA DESACTIVATION
+        private void TglBtn_HC_WindowStatus_Unchecked(object sender, RoutedEventArgs e)
+        {
+            UpdateGlobalStatusButtons();
+            // Mettre à jour le script Mouse Clone si nécessaire
+            UpdateScriptIfNeeded(
+                "HotkeyClone",
+                ref _hcProcess,
+                () => TglBtn_HC_GlobalStatus.IsChecked == true,
+                () =>
+                {
+                    var rawData = CollectData();
+                    var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                    ScriptGenerator.Generate_HC_Script(ahkData);
+                });
+        }
+
+        // TOGGLE BUTTON WS_WINDOWSTATUS : MET A JOUR LA LISTE DES FENETRES ACTIVES POUR UNE FONCTIONNALITE A L'ACTIVATION
+        private void TglBtn_WS_WindowStatus_Checked(object sender, RoutedEventArgs e)
+        {
+            UpdateGlobalStatusButtons();
+            // Mettre à jour le script Mouse Clone si nécessaire
+            UpdateScriptIfNeeded(
+                "WindowSwitcher",
+                ref _wsProcess,
+                () => TglBtn_WS_GlobalStatus.IsChecked == true,
+                () =>
+                {
+                    var rawData = CollectData();
+                    var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                    ScriptGenerator.Generate_WS_Script(ahkData);
+                });
+        }
+
+        // TOGGLE BUTTON WS_WINDOWSTATUS : MET A JOUR LA LISTE DES FENETRES ACTIVES POUR UNE FONCTIONNALITE A LA DESACTIVATION
+        private void TglBtn_WS_WindowStatus_Unchecked(object sender, RoutedEventArgs e)
+        {
+            UpdateGlobalStatusButtons();
+            // Mettre à jour le script Mouse Clone si nécessaire
+            UpdateScriptIfNeeded(
+                "WindowSwitcher",
+                ref _wsProcess,
+                () => TglBtn_WS_GlobalStatus.IsChecked == true,
+                () =>
+                {
+                    var rawData = CollectData();
+                    var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                    ScriptGenerator.Generate_WS_Script(ahkData);
+                });
+        }
+
+        // TOGGLE BUTTON ET_WINDOWSTATUS : MET A JOUR LA LISTE DES FENETRES ACTIVES POUR UNE FONCTIONNALITE A L'ACTIVATION
+        private void TglBtn_ET_WindowStatus_Checked(object sender, RoutedEventArgs e)
+        {
+            UpdateGlobalStatusButtons();
+
+            // Mettre à jour le script Easy Team si nécessaire (sans relancer le script)
+            if (TglBtn_ET_GlobalStatus.IsChecked == true)
+            {
+                var rawData = CollectData();
+                var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                ScriptGenerator.Generate_ET_Script(ahkData);
+            }
+        }
+
+        // TOGGLE BUTTON ET_WINDOWSTATUS : MET A JOUR LA LISTE DES FENETRES ACTIVES POUR UNE FONCTIONNALITE A LA DESACTIVATION
+        private void TglBtn_ET_WindowStatus_Unchecked(object sender, RoutedEventArgs e)
+        {
+            UpdateGlobalStatusButtons();
+
+            // Mettre à jour le script Easy Team si nécessaire (sans relancer le script)
+            if (TglBtn_ET_GlobalStatus.IsChecked == true)
+            {
+                var rawData = CollectData();
+                var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                ScriptGenerator.Generate_ET_Script(ahkData);
             }
         }
 
@@ -423,7 +449,7 @@ namespace Optimizer
             try
             {
                 // Récupérer le ViewModel actuel
-                if (this.DataContext is Interface.CharactersViewModel viewModel)
+                if (this.DataContext is Optimizer.Services.CharactersViewModel viewModel)
                 {
                     // Rafraîchir les données sans recréer complètement la collection
                     viewModel.LoadWindows();
@@ -459,11 +485,21 @@ namespace Optimizer
             }
         }
 
-        // TEXTBOX : PERTE DU FOCUS DES ELEMENTS INTERACTIFS
-        private void ClearFocus_MouseDown(object sender, MouseButtonEventArgs e)
+        // BOUTON EASY TEAM : EXECUTION DU SCRIPT
+        private void BtnEasyTeam_Click(object sender, RoutedEventArgs e)
         {
-            // Transfère le focus vers le conteneur parent
-            Keyboard.ClearFocus();
+            try
+            {
+                // Démarrer le script Easy Team
+                StartScript("EasyTeam", ref _etProcess);
+
+                // Informer l'utilisateur que le script a été exécuté
+                System.Windows.MessageBox.Show("Le script Easy Team a été exécuté avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Erreur lors de l'exécution du script Easy Team : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         // BOUTONS DE RACCOURCIS : VERIFICATION DE LA DISPONIBILITE DES RACCOURCIS DETECTES
@@ -552,6 +588,9 @@ namespace Optimizer
                 button.Content = shortcut;
                 CleanupForButton(button);
                 e.Handled = true;
+
+                // Mettre à jour le script correspondant
+                UpdateScriptIfNeededForButton(button);
             }
         }
 
@@ -582,6 +621,9 @@ namespace Optimizer
                 button.Content = mouseText;
                 CleanupForButton(button);
                 e.Handled = true;
+
+                // Mettre à jour le script correspondant
+                UpdateScriptIfNeededForButton(button);
             }
         }
 
@@ -602,6 +644,27 @@ namespace Optimizer
                 this.PreviewKeyUp -= Window_PreviewKeyUp;
                 this.PreviewMouseUp -= Window_PreviewMouseUp;
             }
+        }
+
+        // CHECKBOX DELAIS : MISE A JOUR DU SCRIPT SI LA FONCTIONNALITE EST ACTIVE
+        private void ChkBox_Delays_Checked(object sender, RoutedEventArgs e)
+        {
+            var checkBox = sender as System.Windows.Controls.CheckBox;
+            UpdateScriptIfNeededForDelaysCheckbox(checkBox);
+        }
+
+        // CHECKBOX DELAIS : MISE A JOUR DU SCRIPT SI LA FONCTIONNALITE EST ACTIVE
+        private void ChkBox_Delays_Unchecked(object sender, RoutedEventArgs e)
+        {
+            var checkBox = sender as System.Windows.Controls.CheckBox;
+            UpdateScriptIfNeededForDelaysCheckbox(checkBox);
+        }
+
+        // TEXTBOX : PERTE DU FOCUS DES ELEMENTS INTERACTIFS
+        private void ClearFocus_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            // Transfère le focus vers le conteneur parent
+            FocusManager.SetFocusedElement(this, UIInterface);
         }
 
         // TEXTBOX : VERIFICATION DES CARACTERES NUMERIQUES
@@ -650,12 +713,12 @@ namespace Optimizer
         {
             var textBox = (System.Windows.Controls.TextBox)sender;
             var defaultValues = new Dictionary<System.Windows.Controls.TextBox, string>
-            {
-                { TxtBox_MC_MinDelay, "50" },
-                { TxtBox_MC_MaxDelay, "125" },
-                { TxtBox_HC_MinDelay, "50" },
-                { TxtBox_HC_MaxDelay, "125" }
-            };
+    {
+        { TxtBox_MC_MinDelay, "50" },
+        { TxtBox_MC_MaxDelay, "125" },
+        { TxtBox_HC_MinDelay, "50" },
+        { TxtBox_HC_MaxDelay, "125" }
+    };
 
             // Validation de base
             int value;
@@ -663,7 +726,7 @@ namespace Optimizer
             {
                 value = int.Parse(defaultValues[textBox]);
             }
-            value = Math.Clamp(value, 0, 9999);
+            value = Math.Clamp(value, 0, 999);
             textBox.Text = $"{value}ms";
 
             // Gestion Min/Max
@@ -678,7 +741,7 @@ namespace Optimizer
                     if (value > pairedValue)
                     {
                         pairedValue = value;
-                        pairedTextBox.Text = $"{Math.Clamp(pairedValue, 0, 9999)}ms";
+                        pairedTextBox.Text = $"{Math.Clamp(pairedValue, 0, 999)}ms";
                     }
                 }
                 else
@@ -687,10 +750,16 @@ namespace Optimizer
                     if (value < pairedValue)
                     {
                         pairedValue = value;
-                        pairedTextBox.Text = $"{Math.Clamp(pairedValue, 0, 9999)}ms";
+                        pairedTextBox.Text = $"{Math.Clamp(pairedValue, 0, 999)}ms";
                     }
                 }
             }
+
+            // Mettre à jour le script correspondant
+            UpdateScriptIfNeededForTextBox(textBox);
+
+            // Forcer la perte de focus
+            FocusManager.SetFocusedElement(this, UIInterface);
         }
 
         // TEXTBOX : VALIDATION PAR LA TOUCHE ENTREE
@@ -698,63 +767,107 @@ namespace Optimizer
         {
             if (e.Key == Key.Enter)
             {
-                Keyboard.ClearFocus();
+                var textBox = (System.Windows.Controls.TextBox)sender;
+
+                // Mettre à jour le script correspondant
+                UpdateScriptIfNeededForTextBox(textBox);
+
+                // Forcer la perte de focus pour déclencher la validation
+                FocusManager.SetFocusedElement(this, UIInterface);
             }
         }
 
-        //COMBOBOX LEADER : DEFINI L'ETAT DU BOUTON DE POSITION DU TCHAT SELON LA SELECTION
+        // COMBOBOX LAYOUT : MISE A JOUR DU SCRIPT SI LA FONCTIONNALITE EST ACTIVE
+        private void CboBox_MC_Layout_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Mettre à jour le script Mouse Clone si nécessaire
+            UpdateScriptIfNeeded(
+                "MouseClone",
+                ref _mcProcess,
+                () => TglBtn_MC_GlobalStatus.IsChecked == true,
+                () =>
+                {
+                    var rawData = CollectData();
+                    var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                    ScriptGenerator.Generate_MC_Script(ahkData);
+                });
+        }
+
+        // COMBOBOX LEADER : DEFINI L'ETAT DU BOUTON DE POSITION DU TCHAT SELON LA SELECTION
         private void CboBox_ET_Leader_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (CboBox_ET_Leader.SelectedItem is LeaderOption selected)
             {
-                // Activer le bouton uniquement si ce n'est pas l'option par défaut
-                Btn_ET_TchatPos.IsEnabled = selected.Value != null;
+                // Désactiver TglBtn_ET_GlobalStatus si la valeur par défaut est sélectionnée
+                if (selected.Value == null && TglBtn_ET_GlobalStatus.IsChecked == true)
+                {
+                    TglBtn_ET_GlobalStatus.IsChecked = false;
+                }
             }
             else
             {
-                Btn_ET_TchatPos.IsEnabled = false;
+                // Désactiver TglBtn_ET_GlobalStatus si aucune sélection valide n'est faite
+                if (TglBtn_ET_GlobalStatus.IsChecked == true)
+                {
+                    TglBtn_ET_GlobalStatus.IsChecked = false;
+                }
             }
+            // Mettre à jour l'état des boutons
+            UpdateGlobalStatusButtons();
+
+            // Mettre à jour le script Mouse Clone si nécessaire
+            UpdateScriptIfNeeded(
+                "EasyTeam",
+                ref _etProcess,
+                () => TglBtn_ET_GlobalStatus.IsChecked == true,
+                () =>
+                {
+                    var rawData = CollectData();
+                    var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                    ScriptGenerator.Generate_ET_Script(ahkData);
+                });
         }
 
 
-// === PARTIE GESTION DES SCRIPTS === //
+
+        // === PARTIE GESTION DES SCRIPTS === //
 
         // Récupération des données
         private Dictionary<string, object> CollectData()
         {
-            // Récupérer le ViewModel actuel
-            if (this.DataContext is CharactersViewModel viewModel)
+            if (this.DataContext is Optimizer.Services.CharactersViewModel viewModel)
             {
-                // Déterminer les valeurs de DelayMin et DelayMax
-                int mcMinDelay = ChkBox_MC_Delays.IsChecked == true
-                    ? int.Parse(TxtBox_MC_MinDelay.Text.Replace("ms", ""))
-                    : 0;
-
-                int mcMaxDelay = ChkBox_MC_Delays.IsChecked == true
-                    ? int.Parse(TxtBox_MC_MaxDelay.Text.Replace("ms", ""))
-                    : 0;
-
-                return new Dictionary<string, object>
+                var data = new Dictionary<string, object>
         {
             { "Personnages", viewModel.Personnages },
+            // Mouse Clone
             { "MC_GlobalStatus", TglBtn_MC_GlobalStatus.IsChecked },
             { "MC_Shortcut", Btn_MC_Shortcut.Content.ToString() },
             { "MC_Delays", ChkBox_MC_Delays.IsChecked },
-            { "MC_MinDelay", mcMinDelay }, // Valeur conditionnelle
-            { "MC_MaxDelay", mcMaxDelay }, // Valeur conditionnelle
+            { "MC_MinDelay", TxtBox_MC_MinDelay.Text.Replace("ms", "") },
+            { "MC_MaxDelay", TxtBox_MC_MaxDelay.Text.Replace("ms", "") },
             { "MC_Layout", CboBox_MC_Layout.SelectedItem is ComboBoxItem selectedItem ? selectedItem.Content.ToString() : null },
-            { "ActiveWindows", viewModel.Personnages != null && viewModel.Personnages.Any() ? viewModel.Personnages.Where(p => p.MouseClone).Select(p => p.WindowName).ToHashSet() : new HashSet<string>() },
+            { "ActiveWindows_MC", viewModel.Personnages.Where(p => p.MouseClone).Select(p => p.WindowName).ToHashSet() },
+            // Hotkey Clone
             { "HC_GlobalStatus", TglBtn_HC_GlobalStatus.IsChecked },
             { "HC_Shortcut", Btn_HC_Shortcut.Content.ToString() },
             { "HC_Delays", ChkBox_HC_Delays.IsChecked },
             { "HC_MinDelay", TxtBox_HC_MinDelay.Text.Replace("ms", "") },
             { "HC_MaxDelay", TxtBox_HC_MaxDelay.Text.Replace("ms", "") },
+            { "ActiveWindows_HC", viewModel.Personnages.Where(p => p.HotkeyClone).Select(p => p.WindowName).ToHashSet() },
+            // Window Switcher
             { "WS_GlobalStatus", TglBtn_WS_GlobalStatus.IsChecked },
             { "WS_Shortcut", Btn_WS_Shortcut.Content.ToString() },
+            { "ActiveWindows_WS", viewModel.Personnages.Where(p => p.WindowSwitcher).Select(p => p.WindowName).ToHashSet() },
+            // Easy Team
             { "ET_GlobalStatus", TglBtn_ET_GlobalStatus.IsChecked },
-            { "ET_Leader", CboBox_ET_Leader.SelectedItem?.ToString() },
-            { "ET_TchatPos", Btn_ET_TchatPos.Content.ToString() }
+            { "ET_Leader", CboBox_ET_Leader.SelectedItem is LeaderOption selectedOption && selectedOption.Value != null ? selectedOption.Value.WindowName : null },
+            { "ActiveWindows_ET", viewModel.Personnages.Where(p => p.EasyTeam).Select(p => p.WindowName).ToHashSet() }
         };
+                string leaderWindowName = data["ET_Leader"] as string;
+                System.Diagnostics.Debug.WriteLine($"Titre de la fenêtre Easy Team dans CollectData : {leaderWindowName}");
+
+                return data;
             }
             else
             {
@@ -762,62 +875,150 @@ namespace Optimizer
             }
         }
 
+        // Déclaration des process pour chaque fonctionnalité
         private Process _mcProcess;
         private Process _hcProcess;
         private Process _wsProcess;
         private Process _etProcess;
 
+        // LANCEMENT DE LA FONCTIONNALITE (SCRIPT) MOUSE CLONE
         private void TglBtn_MC_GlobalStatus_Checked(object sender, RoutedEventArgs e)
         {
-            ScriptGenerator.Generate_MC_Script();
-            StartScript("MC", ref _mcProcess);
+            try
+            {
+                // Récupérer les données brutes
+                var rawData = CollectData();
+
+                // Convertir les données pour AHK v2
+                var ahkData = AhkConverter.ConvertToAhkData(rawData);
+
+                // Générer le script AHK pour Mouse Clone
+                ScriptGenerator.Generate_MC_Script(ahkData);
+
+                // Démarrer le script
+                StartScript("MouseClone", ref _mcProcess);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Erreur lors de la génération ou de l'exécution du script Mouse Clone : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
+        // FERMETURE DE LA FONCTIONNALITE (SCRIPT) MOUSE CLONE
         private void TglBtn_MC_GlobalStatus_Unchecked(object sender, RoutedEventArgs e)
         {
             StopScript(ref _mcProcess);
         }
 
+        // LANCEMENT DE LA FONCTIONNALITE (SCRIPT) HOTKEY CLONE
         private void TglBtn_HC_GlobalStatus_Checked(object sender, RoutedEventArgs e)
         {
-            ScriptGenerator.Generate_HC_Script();
-            StartScript("HC", ref _hcProcess);
+            try
+            {
+                // Récupérer les données brutes
+                var rawData = CollectData();
+
+                // Convertir les données pour AHK v2
+                var ahkData = AhkConverter.ConvertToAhkData(rawData);
+
+                // Générer le script AHK pour Hotkey Clone
+                ScriptGenerator.Generate_HC_Script(ahkData);
+
+                // Démarrer le script
+                StartScript("HotkeyClone", ref _hcProcess);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Erreur lors de la génération ou de l'exécution du script Hotkey Clone : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
+        // FERMETURE DE LA FONCTIONNALITE (SCRIPT) HOTKEY CLONE
         private void TglBtn_HC_GlobalStatus_Unchecked(object sender, RoutedEventArgs e)
         {
             StopScript(ref _hcProcess);
         }
 
+        // LANCEMENT DE LA FONCTIONNALITE (SCRIPT) WINDOW SWITCHER
         private void TglBtn_WS_GlobalStatus_Checked(object sender, RoutedEventArgs e)
         {
-            ScriptGenerator.Generate_WS_Script();
-            StartScript("WS", ref _wsProcess);
+            try
+            {
+                // Récupérer les données brutes
+                var rawData = CollectData();
+
+                // Convertir les données pour AHK v2
+                var ahkData = AhkConverter.ConvertToAhkData(rawData);
+
+                // Générer le script AHK pour Hotkey Clone
+                ScriptGenerator.Generate_WS_Script(ahkData);
+
+                // Démarrer le script
+                StartScript("WindowSwitcher", ref _wsProcess);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Erreur lors de la génération ou de l'exécution du script Window Switcher : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
+        // FERMETURE DE LA FONCTIONNALITE (SCRIPT) WINDOW SWITCHER
         private void TglBtn_WS_GlobalStatus_Unchecked(object sender, RoutedEventArgs e)
         {
             StopScript(ref _wsProcess);
         }
 
+        // LANCEMENT DE LA FONCTIONNALITE (SCRIPT) EASY TEAM
         private void TglBtn_ET_GlobalStatus_Checked(object sender, RoutedEventArgs e)
         {
-            ScriptGenerator.Generate_ET_Script();
-            StartScript("ET", ref _etProcess);
+            try
+            {
+                // Vérifier si un chef d'équipe valide est sélectionné
+                if (CboBox_ET_Leader.SelectedItem is LeaderOption selectedOption && selectedOption.Value == null)
+                {
+                    System.Windows.MessageBox.Show("Veuillez sélectionner un chef d'équipe valide avant d'activer cette fonctionnalité.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                    // Désactiver immédiatement le ToggleButton
+                    TglBtn_ET_GlobalStatus.IsChecked = false;
+                    return;
+                }
+
+                // Récupérer les données brutes
+                var rawData = CollectData();
+
+                // Convertir les données pour AHK v2
+                var ahkData = AhkConverter.ConvertToAhkData(rawData);
+
+                // Générer le script AHK pour Easy Team
+                ScriptGenerator.Generate_ET_Script(ahkData);
+
+                // Activer le bouton Btn_EasyTeam
+                Btn_EasyTeam.IsEnabled = true;
+
+                // Informer l'utilisateur que le script a été généré
+                System.Windows.MessageBox.Show("Le script Easy Team a été généré avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Erreur lors de la génération du script Easy Team : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
+        // FERMETURE DE LA FONCTIONNALITE (SCRIPT) EASY TEAM
         private void TglBtn_ET_GlobalStatus_Unchecked(object sender, RoutedEventArgs e)
         {
             StopScript(ref _etProcess);
+            Btn_EasyTeam.IsEnabled = false;
         }
 
+        // METHODE DE LANCEMENT D'UN SCRIPT
         private void StartScript(string scriptName, ref Process process)
         {
             // Arrêter le script actuel s'il est déjà en cours d'exécution
             StopScript(ref process);
 
             // Chemin du fichier script
-            string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{scriptName}-Temp.ahk");
+            string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{scriptName}.ahk");
 
             // Vérifier si le fichier script existe
             if (!File.Exists(scriptPath))
@@ -856,6 +1057,7 @@ namespace Optimizer
             }
         }
 
+        // METHODE DE FERMETURE D'UN SCRIPT
         private void StopScript(ref Process process)
         {
             // Arrêter le processus AHK
@@ -865,6 +1067,138 @@ namespace Optimizer
                 process.Dispose();
                 process = null;
                 Console.WriteLine("Script désactivé !");
+            }
+        }
+
+        // METHODE DE MISE A JOUR D'UN SCRIPT ACTIF
+        private void UpdateScriptIfNeeded(string scriptName, ref Process process, Func<bool> isGlobalStatusChecked, Action generateScriptAction)
+        {
+            // Vérifier si une TextBox a encore le focus
+            if (Keyboard.FocusedElement is System.Windows.Controls.TextBox)
+            {
+                return; // Ignorer la mise à jour si une TextBox est active
+            }
+
+            // Vérifier si le ToggleButton _GlobalStatus est activé
+            if (isGlobalStatusChecked())
+            {
+                // Arrêter le script en cours
+                StopScript(ref process);
+
+                // Regénérer le script
+                generateScriptAction();
+
+                // Relancer le script SAUF pour Easy Team
+                if (scriptName != "EasyTeam")
+                {
+                    StartScript(scriptName, ref process);
+                }
+            }
+        }
+
+        // METHODE DE MISE A JOUR D'UN SCRIPT ACTIF POUR LES BOUTONS DE RACCOURCIS
+        private void UpdateScriptIfNeededForButton(System.Windows.Controls.Button button)
+        {
+            if (button == Btn_MC_Shortcut)
+            {
+                UpdateScriptIfNeeded(
+                    "MouseClone",
+                    ref _mcProcess,
+                    () => TglBtn_MC_GlobalStatus.IsChecked == true,
+                    () =>
+                    {
+                        var rawData = CollectData();
+                        var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                        ScriptGenerator.Generate_MC_Script(ahkData);
+                    });
+            }
+            else if (button == Btn_HC_Shortcut)
+            {
+                UpdateScriptIfNeeded(
+                    "HotkeyClone",
+                    ref _hcProcess,
+                    () => TglBtn_HC_GlobalStatus.IsChecked == true,
+                    () =>
+                    {
+                        var rawData = CollectData();
+                        var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                        ScriptGenerator.Generate_HC_Script(ahkData);
+                    });
+            }
+            else if (button == Btn_WS_Shortcut)
+            {
+                UpdateScriptIfNeeded(
+                    "WindowSwitcher",
+                    ref _wsProcess,
+                    () => TglBtn_WS_GlobalStatus.IsChecked == true,
+                    () =>
+                    {
+                        var rawData = CollectData();
+                        var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                        ScriptGenerator.Generate_WS_Script(ahkData);
+                    });
+            }
+        }
+
+        // METHODE DE MISE A JOUR D'UN SCRIPT ACTIF POUR LES CHECKBOX DE DELAIS
+        private void UpdateScriptIfNeededForDelaysCheckbox(System.Windows.Controls.CheckBox checkBox)
+        {
+            if (checkBox == ChkBox_MC_Delays)
+            {
+                UpdateScriptIfNeeded(
+                    "MouseClone",
+                    ref _mcProcess,
+                    () => TglBtn_MC_GlobalStatus.IsChecked == true,
+                    () =>
+                    {
+                        var rawData = CollectData();
+                        var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                        ScriptGenerator.Generate_MC_Script(ahkData);
+                    });
+            }
+            else if (checkBox == ChkBox_HC_Delays)
+            {
+                UpdateScriptIfNeeded(
+                    "HotkeyClone",
+                    ref _hcProcess,
+                    () => TglBtn_HC_GlobalStatus.IsChecked == true,
+                    () =>
+                    {
+                        var rawData = CollectData();
+                        var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                        ScriptGenerator.Generate_HC_Script(ahkData);
+                    });
+            }
+        }
+
+        // METHODE DE MISE A JOUR D'UN SCRIPT ACTIF POUR LES TEXTBOX DES DELAIS
+        private void UpdateScriptIfNeededForTextBox(System.Windows.Controls.TextBox textBox)
+        {
+            if (textBox == TxtBox_MC_MinDelay || textBox == TxtBox_MC_MaxDelay)
+            {
+                UpdateScriptIfNeeded(
+                    "MouseClone",
+                    ref _mcProcess,
+                    () => TglBtn_MC_GlobalStatus.IsChecked == true,
+                    () =>
+                    {
+                        var rawData = CollectData();
+                        var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                        ScriptGenerator.Generate_MC_Script(ahkData);
+                    });
+            }
+            else if (textBox == TxtBox_HC_MinDelay || textBox == TxtBox_HC_MaxDelay)
+            {
+                UpdateScriptIfNeeded(
+                    "HotkeyClone",
+                    ref _hcProcess,
+                    () => TglBtn_HC_GlobalStatus.IsChecked == true,
+                    () =>
+                    {
+                        var rawData = CollectData();
+                        var ahkData = AhkConverter.ConvertToAhkData(rawData);
+                        ScriptGenerator.Generate_HC_Script(ahkData);
+                    });
             }
         }
     }
