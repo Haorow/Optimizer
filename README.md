@@ -20,21 +20,10 @@ Permet de basculer d'une fenêtre du jeu à une autre fenêtre du jeu (équivale
 Easy Team :
 Permet d'inviter en groupe les personnages correspondants aux fenêtres spécifiées depuis la fenêtre du personnage défini en temps que chef (équivalent à /invite NomDuPersonnage dans le chat du jeu).
 
-
-## Scripts individuels fonctionnant indépendament de l'application
-
-#### Ces scripts sont à modifier et intégrer dans le code selon le code UI et le code behind existant
-
-- Fonctionnalité Mouse Clone
-- Fonctionnalité Hotkey Clone
-- Fonctionnalité Window Switcher
-- Fonctionnalité Easy Team
-
 ## Fonctionnalités à venir
 
-- Ajout de la fonctionnalité du bouton Masquer dans la barre des tâches et d'un menu contextuel lors du clic sur l'icone
-- Ajout de la fonctionnalité du bouton permettant de définir les coordonnées de l'entrée de texte du tchat pour la fonctionnalité Easy Team
-- Ajout d'un fichier settings.ini pour sauvegarder l'état de l'application à la fermeture
+- Amélioration du menu contextuel (possibilité d'activer/désactiver des fonctionnalités)
+- Ajout d'un fichier settings.ini pour sauvegarder l'état de l'application à la fermeture et le rétablir à l'ouverture.
 
 ## Prérequis
 
