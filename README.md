@@ -20,7 +20,7 @@ Permet de basculer d'une fenêtre du jeu à une autre fenêtre du jeu (équivale
 Easy Team :
 Permet d'inviter en groupe les personnages correspondants aux fenêtres spécifiées depuis la fenêtre du personnage défini en temps que chef (équivalent à /invite NomDuPersonnage dans le chat du jeu).
 
-## Fonctionnalités à venir
+## Mises à jour à venir
 
 - Amélioration du menu contextuel (possibilité d'activer/désactiver des fonctionnalités)
 - Ajout d'un fichier settings.ini pour sauvegarder l'état de l'application à la fermeture et le rétablir à l'ouverture.
