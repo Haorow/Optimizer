@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -70,7 +71,7 @@ namespace Optimizer.Services
             var root = doc.RootElement;
 
             string tagName = root.GetProperty("tag_name").GetString() ?? string.Empty;
-            string remoteVersion = tagName.TrimStart('v');
+            string remoteVersion = tagName.TrimStart('v', 'V');
 
             string? downloadUrl = null;
             if (root.TryGetProperty("assets", out var assets))
@@ -92,7 +93,9 @@ namespace Optimizer.Services
 
         private static bool IsNewerVersion(string remoteVersion)
         {
-            var local = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
+            var localFull = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
+            var local = new Version(localFull.Major, localFull.Minor, localFull.Build);
+
             if (!Version.TryParse(remoteVersion, out var remote))
                 return false;
 

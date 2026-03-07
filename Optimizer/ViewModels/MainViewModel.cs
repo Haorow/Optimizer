@@ -670,7 +670,6 @@ namespace Optimizer.ViewModels
         {
             _updateService.AlreadyUpToDate += () =>
             {
-                // Rien à faire — l'application démarre normalement
             };
 
             _updateService.ProgressChanged += progress =>
@@ -690,7 +689,6 @@ namespace Optimizer.ViewModels
                 App.Current.Dispatcher.Invoke(() =>
                 {
                     UpdateStatusText = "Redémarrage...";
-                    // Laisser 500ms pour que l'utilisateur voie "Redémarrage..."
                     Task.Delay(500).ContinueWith(_ =>
                         App.Current.Dispatcher.Invoke(() => App.Current.Shutdown()));
                 });
@@ -702,8 +700,7 @@ namespace Optimizer.ViewModels
                 {
                     IsUpdating = false;
                     Logger.Log($"❌ Erreur de mise à jour : {message}");
-                    // Silencieux pour l'utilisateur — l'app continue normalement
-                    System.Windows.Forms.MessageBox.Show($"Erreur MAJ : {message}"); // ← temporaire
+                    System.Windows.Forms.MessageBox.Show($"Erreur MAJ : {message}");
                 });
             };
 
