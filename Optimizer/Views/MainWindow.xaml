@@ -1528,8 +1528,7 @@
             </Border>
 
             <!-- Overlay sombre + barre de progression verte -->
-            <Grid Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVisibilityConverter}}"
-      Panel.ZIndex="999">
+            <Grid Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVisibilityConverter}}" Panel.ZIndex="999">
 
                 <!-- Fond sombre semi-transparent bloquant toutes les interactions -->
                 <Border Background="#CC000000" IsHitTestVisible="True"/>
