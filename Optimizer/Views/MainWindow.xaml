@@ -18,7 +18,7 @@
         d:HorizontalAlignment="Center"
         d:VerticalAlignment="Center"
         Width="400"
-        Height="780">
+        Height="390">
     <!-- Height : 390 (replié) ou 780 (déplié) -->
 
 
@@ -1535,7 +1535,7 @@
                 <Border Background="#CC000000" IsHitTestVisible="True"/>
 
                 <!-- Contenu centré -->
-                <StackPanel VerticalAlignment="Center"
+                <StackPanel VerticalAlignment="Top"
                 HorizontalAlignment="Center"
                 Width="320">
 
