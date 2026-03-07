@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -14,7 +15,8 @@ namespace Optimizer.Services
         // ── Configuration ────────────────────────────────────────────────────
         private const string GitHubApiUrl = "https://api.github.com/repos/Haorow/Optimizer/releases/latest";
         private const string ExeName = "Optimizer.exe";
-        private const string TempExeName = "Optimizer_new.exe";
+        private const string TempZipName = "Optimizer_update.zip";
+        private const string TempExtractDir = "Optimizer_update_tmp";
         private const string UpdateBatName = "update.bat";
 
         // ── Événements ───────────────────────────────────────────────────────
@@ -27,17 +29,12 @@ namespace Optimizer.Services
         /// <summary>Appelé quand une erreur survient (message en paramètre).</summary>
         public event Action<string>? UpdateError;
 
-        /// <summary>Appelé juste avant la fermeture pour mise à jour — permet à l'UI de se préparer.</summary>
+        /// <summary>Appelé juste avant la fermeture pour mise à jour.</summary>
         public event Action? UpdateReady;
 
         // ── Point d'entrée principal ──────────────────────────────────────────
-        /// <summary>
-        /// Vérifie si une mise à jour est disponible.
-        /// Si oui, télécharge, génère le .bat et déclenche la fermeture.
-        /// </summary>
         public async Task CheckAndUpdateAsync()
         {
-            // Nettoyage préventif des fichiers résiduels (crash précédent)
             CleanupResidualFiles();
 
             try
@@ -51,6 +48,7 @@ namespace Optimizer.Services
                 }
 
                 await DownloadUpdateAsync(downloadUrl);
+                ExtractUpdate();
                 GenerateUpdateBat();
                 UpdateReady?.Invoke();
             }
@@ -71,7 +69,6 @@ namespace Optimizer.Services
             using var doc = await JsonDocument.ParseAsync(stream);
             var root = doc.RootElement;
 
-            // Tag GitHub : "v1.2.0" → Version : "1.2.0"
             string tagName = root.GetProperty("tag_name").GetString() ?? string.Empty;
             string remoteVersion = tagName.TrimStart('v');
 
@@ -81,7 +78,7 @@ namespace Optimizer.Services
                 foreach (var asset in assets.EnumerateArray())
                 {
                     string? name = asset.GetProperty("name").GetString();
-                    if (name is not null && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                    if (name is not null && name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
                     {
                         downloadUrl = asset.GetProperty("browser_download_url").GetString();
                         break;
@@ -105,7 +102,7 @@ namespace Optimizer.Services
         // ── Téléchargement ────────────────────────────────────────────────────
         private async Task DownloadUpdateAsync(string downloadUrl)
         {
-            string tempPath = GetAppPath(TempExeName);
+            string tempPath = GetAppPath(TempZipName);
 
             using var client = CreateHttpClient();
             using var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
@@ -116,7 +113,7 @@ namespace Optimizer.Services
             using var srcStream = await response.Content.ReadAsStreamAsync();
             using var destStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write);
 
-            var buffer = new byte[81920]; // 80 Ko par chunk
+            var buffer = new byte[81920];
             long bytesRead = 0;
             int read;
 
@@ -129,8 +126,23 @@ namespace Optimizer.Services
                     ProgressChanged?.Invoke((double)bytesRead / totalBytes.Value);
             }
 
-            // S'assurer que la barre atteint 100%
             ProgressChanged?.Invoke(1.0);
+        }
+
+        // ── Extraction du zip ─────────────────────────────────────────────────
+        private static void ExtractUpdate()
+        {
+            string zipPath = GetAppPath(TempZipName);
+            string extractDir = GetAppPath(TempExtractDir);
+
+            // Nettoyer le dossier temporaire s'il existe déjà
+            if (Directory.Exists(extractDir))
+                Directory.Delete(extractDir, recursive: true);
+
+            ZipFile.ExtractToDirectory(zipPath, extractDir);
+
+            // Supprimer le zip maintenant qu'il est extrait
+            File.Delete(zipPath);
         }
 
         // ── Génération du script de remplacement ─────────────────────────────
@@ -138,21 +150,26 @@ namespace Optimizer.Services
         {
             string appDir = AppDomain.CurrentDomain.BaseDirectory;
             string exePath = GetAppPath(ExeName);
-            string tmpPath = GetAppPath(TempExeName);
+            string extractDir = GetAppPath(TempExtractDir);
             string batPath = GetAppPath(UpdateBatName);
 
-            // Le .bat attend la fermeture d'Optimizer, remplace l'exe, relance, puis se supprime
+            // Le .bat :
+            // 1. Attend la fermeture d'Optimizer
+            // 2. Copie tous les fichiers du dossier extrait vers le dossier de l'app
+            // 3. Supprime le dossier temporaire
+            // 4. Relance Optimizer
+            // 5. Se supprime lui-même
             string bat = $"""
                 @echo off
                 timeout /t 2 /nobreak >nul
-                move /y "{tmpPath}" "{exePath}"
+                xcopy /E /Y /I "{extractDir}\*" "{appDir}"
+                rmdir /S /Q "{extractDir}"
                 start "" "{exePath}"
                 del "%~f0"
                 """;
 
             File.WriteAllText(batPath, bat);
 
-            // Lancer le .bat en arrière-plan, fenêtre cachée
             Process.Start(new ProcessStartInfo
             {
                 FileName = batPath,
@@ -169,13 +186,20 @@ namespace Optimizer.Services
         /// </summary>
         private static void CleanupResidualFiles()
         {
-            TryDelete(GetAppPath(TempExeName));
+            TryDelete(GetAppPath(TempZipName));
             TryDelete(GetAppPath(UpdateBatName));
+            TryDeleteDir(GetAppPath(TempExtractDir));
         }
 
         private static void TryDelete(string path)
         {
             try { if (File.Exists(path)) File.Delete(path); }
+            catch { /* silencieux */ }
+        }
+
+        private static void TryDeleteDir(string path)
+        {
+            try { if (Directory.Exists(path)) Directory.Delete(path, recursive: true); }
             catch { /* silencieux */ }
         }
 
@@ -186,7 +210,6 @@ namespace Optimizer.Services
         private static HttpClient CreateHttpClient()
         {
             var client = new HttpClient();
-            // GitHub exige un User-Agent
             client.DefaultRequestHeaders.UserAgent.Add(
                 new ProductInfoHeaderValue("Optimizer", GetLocalVersion()));
             client.DefaultRequestHeaders.Accept.Add(
