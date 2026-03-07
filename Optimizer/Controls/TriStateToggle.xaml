@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="Optimizer.Controls.TriStateToggle"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="36" Height="16" Margin="5,0"
+             MouseLeftButtonDown="OnMouseDown"
+             MouseLeftButtonUp="OnMouseUp"
+             MouseEnter="OnMouseEnter"
+             MouseLeave="OnMouseLeave">
+    <Grid>
+
+        <!-- Fond du switch (couleur animée en code-behind selon l'état) -->
+        <!-- Le brush est déclaré inline (non-freezé) pour permettre l'animation ColorAnimation -->
+        <Border x:Name="SwitchBackground"
+                Height="16"
+                Width="36"
+                CornerRadius="3">
+            <Border.Background>
+                <SolidColorBrush Color="#909090"/>
+            </Border.Background>
+        </Border>
+
+        <!-- Thumb blanc (largeur animée en code-behind selon l'état)         -->
+        <!-- Largeurs : 10px = Lent (gauche), 20px = Normal, 30px = Rapide    -->
+        <!-- Le thumb se "remplit" progressivement de gauche à droite          -->
+        <Border x:Name="SwitchThumb"
+                Height="10"
+                Width="10"
+                CornerRadius="1.5"
+                Background="White"
+                HorizontalAlignment="Left"
+                Margin="3"/>
+
+    </Grid>
+</UserControl>

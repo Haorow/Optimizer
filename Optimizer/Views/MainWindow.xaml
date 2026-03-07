@@ -1,0 +1,1585 @@
+﻿<Window x:Class="Optimizer.Views.MainWindow"	
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:sys="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
+		xmlns:local="clr-namespace:Optimizer.Views"
+        xmlns:controls="clr-namespace:Optimizer.Controls"
+		mc:Ignorable="d"
+        
+        Title="Optimizer V1"
+		WindowStyle="None"
+        ResizeMode="NoResize"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Foreground="White"
+        d:HorizontalAlignment="Center"
+        d:VerticalAlignment="Center"
+        Width="400"
+        Height="780">
+    <!-- Height : 390 (replié) ou 780 (déplié) -->
+
+
+
+    <Window.Resources>
+        <!-- STYLE : MENU CONTEXTUEL -->
+        <Style TargetType="ContextMenu">
+            <Setter Property="MinWidth" Value="180"/>
+            <Setter Property="Background" Value="#FF252525" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{TemplateBinding Background}" 
+                        CornerRadius="10,10,0,10"
+                        Padding="{TemplateBinding Padding}">
+                            <StackPanel>
+                                <ItemsPresenter />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : ITEMS DU MENU CONTEXTUEL -->
+        <Style TargetType="MenuItem">
+            <Setter Property="Height" Value="35"/>
+            <Setter Property="MinWidth" Value="180"/>
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontFamily" Value="Bahnschrift Light"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border Background="{TemplateBinding Background}" 
+                        CornerRadius="5"
+                        Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Texte à gauche -->
+                                <ContentPresenter Grid.Column="0"
+                                          Content="{TemplateBinding Header}"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Left" />
+
+                                <!-- Icon à droite (Toggle ou symbole) -->
+                                <ContentPresenter Grid.Column="1"
+                                          Content="{TemplateBinding Icon}"
+                                          VerticalAlignment="Center"
+                                          Margin="10,0,0,0"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Survol pour les items cliquables (ceux sans ToggleButton) -->
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <MultiTrigger.Setters>
+                                    <Setter Property="Foreground" Value="#3AAD3A"/>
+                                    <Setter Property="FontFamily" Value="Bahnschrift Semibold"/>
+                                </MultiTrigger.Setters>
+                            </MultiTrigger>
+
+                            <!-- Désactivé -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#FF606060"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : SÉPARATEUR CUSTOM DANS LE MENU CONTEXTUEL -->
+        <Style x:Key="MenuSeparatorStyle" TargetType="MenuItem">
+            <Setter Property="IsEnabled" Value="False"/>
+            <Setter Property="Height" Value="11"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border Height="1" 
+                        Background="#40FFFFFF" 
+                        Margin="10,5,10,5"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : BARRE DE TITRE -->
+        <Style x:Key="WindowButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <!-- STYLE : BOUTONS MASQUER ET REDUIRE -->
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}"
+                                VerticalAlignment="Center">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Height="30"
+                                              Width="30"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#20FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#4BC64B"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : BOUTON FERMER -->
+        <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowButtonStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}"
+                                Height="30"
+                                Width="30"
+                                CornerRadius="0,10,0,0"
+                                VerticalAlignment="Center">
+                            <ContentPresenter HorizontalAlignment="Center"
+                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#20FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#A3232B"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : HEADER COLONNES TOGGLE BUTTON -->
+        <Style x:Key="HeaderSwitchToggleButton" TargetType="ToggleButton">
+            <!-- Propriétés Fixes -->
+            <Setter Property="Width" Value="25"/>
+            <Setter Property="Height" Value="18"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="ToggleButtonBorder"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Effet lorsque le ToggleButton est survolé -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ToggleButtonBorder" Property="BorderBrush" Value="#4BC64B"/>
+                            </Trigger>
+                            <!-- Effet lorsque le ToggleButton est pressé -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ToggleButtonBorder" Property="BorderBrush" Value="#369936"/>
+                            </Trigger>
+                            <!-- Effet lorsque le ToggleButton est désactivé -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="ToggleButtonBorder" Property="BorderBrush" Value="Transparent"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : TOGGLE BUTTON MOBILE -->
+        <Style x:Key="SwitchToggleButton" TargetType="ToggleButton">
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Grid>
+                            <!-- Fond du switch -->
+                            <Border x:Name="SwitchBackground" 
+                            Height="16"
+                            Width="25" 
+                            CornerRadius="3">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#909090"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <ColorAnimation Storyboard.TargetProperty="Background.Color" 
+                                                                    To="#3AAD3A" 
+                                                                    Duration="0:0:0.2"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <ColorAnimation Storyboard.TargetProperty="Background.Color" 
+                                                                    To="#909090" 
+                                                                    Duration="0:0:0.2"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+
+                            <!-- Interrupteur -->
+                            <Border x:Name="SwitchThumb"
+                            Height="10"
+                            Width="10" 
+                            CornerRadius="1.5" 
+                            Background="White" 
+                            HorizontalAlignment="Left" 
+                            Margin="3">
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="ThumbTransform" X="0"/>
+                                </Border.RenderTransform>
+                            </Border>
+                        </Grid>
+
+                        <!-- Déclencheurs pour animer le déplacement -->
+                        <ControlTemplate.Triggers>
+                            <!-- Quand coché : glisser vers la droite -->
+                            <Trigger Property="IsChecked" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ThumbTransform"
+                                                     Storyboard.TargetProperty="X"
+                                                     To="9"
+                                                     Duration="0:0:0.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ThumbTransform"
+                                                     Storyboard.TargetProperty="X"
+                                                     To="0"
+                                                     Duration="0:0:0.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <!-- Quand désactivé -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="SwitchBackground" Property="Background" Value="#AAAAAA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : BOUTONS DE CONTROLE -->
+        <Style x:Key="ButtonControl" TargetType="Button">
+            <Setter Property="Background" Value="#3AAD3A"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="7" BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <!-- Survol (MouseOver) -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#4BC64B"/>
+                </Trigger>
+                <!-- Cliqué (Pressed) -->
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#369936"/>
+                </Trigger>
+                <!-- Désactivé -->
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#FF303030"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : BOUTON SETTINGS -->
+        <Style x:Key="ButtonSettings" TargetType="ToggleButton">
+            <Setter Property="Background" Value="#FF404040"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Margin" Value="5,5,5,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="7" BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <!-- Survol (MouseOver) -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#303030"/>
+                </Trigger>
+                <!-- Checké (Pressed) -->
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#404040"/>
+                </Trigger>
+                <!-- Checké (Checked) -->
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ToggleButton">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="7,7,0,0" BorderThickness="0">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Content">
+                        <Setter.Value>
+                            <Image Source="/Optimizer;component/Resources/Icons/up.png" Stretch="Uniform" Height="7"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <!-- Bouton activé ET survolé -->
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsChecked" Value="True"/>
+                        <Condition Property="IsMouseOver" Value="True"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="#303030"/>
+                </MultiTrigger>
+                <!-- Bouton cliqué, activé ET survolé -->
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsPressed" Value="True"/>
+                        <Condition Property="IsChecked" Value="True"/>
+                        <Condition Property="IsMouseOver" Value="True"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="#404040"/>
+                </MultiTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : EN-TÊTE DE LA DATAGRID -->
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="FontSize" Value="8"/>
+            <Setter Property="FontFamily" Value="Bahnschrift Light"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+
+        <!-- STYLE : LIGNES DE LA DATAGRID -->
+        <Style TargetType="DataGridRow">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridRow">
+                        <Border Margin="0,0,0,2" Background="#353535" CornerRadius="7" Width="390">
+                            <DataGridCellsPresenter Margin="0,0,0,0"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <!-- Désactiver la surbrillance visuelle pour les lignes sélectionnées -->
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : CELLULES DE LA DATAGRID -->
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <!-- Apparence quand la cellule est sélectionnée -->
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
+                </Trigger>
+                <!-- Apparence quand la DataGrid n'a pas le focus -->
+                <DataTrigger Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=DataGrid}}" Value="False">
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : BOUTONS DE DEPLACEMENT DES LIGNES -->
+        <Style x:Key="ButtonUpDownSmall" TargetType="Button">
+            <Setter Property="Background" Value="#FF505050"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3" BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <!-- Survol (MouseOver) -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#4BC64B"/>
+                </Trigger>
+                <!-- Cliqué (Pressed) -->
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#369936"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : LABELS DES PARAMETRES -->
+        <Style x:Key="LabelSettings" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="7.5,0,5,0"/>
+            <Setter Property="FontFamily" Value="Bahnschrift Semibold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- STYLE : SOUS-LABELS DES PARAMETRES -->
+        <Style x:Key="SubLabelSettings" TargetType="TextBlock">
+            <Setter Property="Width" Value="155"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="42.5,0,5,0"/>
+            <Setter Property="FontFamily" Value="Bahnschrift Light"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- STYLE : BULLES D'INFORMATIONS -->
+        <Style x:Key="TooltipIcon" TargetType="TextBlock">
+            <Setter Property="Text" Value="ⓘ"/>
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Padding" Value="2.5,0,0,0"/>
+            <Setter Property="FontFamily" Value="Bahnschrift"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Foreground" Value="Gray"/>
+            <Setter Property="ToolTipService.InitialShowDelay" Value="333"/>
+        </Style>
+
+        <!-- STYLE : TOOLTIP -->
+        <Style x:Key="TooltipStyle" TargetType="ToolTip">
+            <Setter Property="Background" Value="#E5000000"/>
+            <Setter Property="Foreground" Value="LightGray"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="10" BorderThickness="0" BorderBrush="#0DFFFFFF" Padding="15">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : BOUTONS DE RACCOURCIS -->
+        <Style x:Key="ButtonShortcuts" TargetType="Button">
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Width" Value="182.5"/>
+            <Setter Property="Margin" Value="5,0,7.5,0"/>
+            <Setter Property="Background" Value="#FF353535"/>
+            <Setter Property="Foreground" Value="#FF909090"/>
+            <Setter Property="FontFamily" Value="Bahnschrift Bold"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="5" BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <!-- Survol (MouseOver) -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF303030"/>
+                </Trigger>
+                <!-- Cliqué (Pressed) -->
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FF404040"/>
+                </Trigger>
+                <Trigger Property="Content" Value="Raccourci déjà utilisé !">
+                    <Setter Property="Foreground" Value="Red"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Trigger>
+                <Trigger Property="Content" Value="Raccourci indisponible !">
+                    <Setter Property="Foreground" Value="Orange"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="#FF404040"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : BOUTON VALEUR SETUP (affichage seul, non cliquable) -->
+        <Style x:Key="STPButtonValue" TargetType="Button" BasedOn="{StaticResource ButtonShortcuts}">
+            <Setter Property="IsEnabled" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3" BorderThickness="2" BorderBrush="#FF353535">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="Transparent"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : BOUTON MC+AF -->
+        <Style x:Key="MCAFButtonShortcut" TargetType="Button" BasedOn="{StaticResource ButtonShortcuts}">
+            <Setter Property="Width" Value="156.5"/>
+            <Setter Property="IsEnabled" Value="False"/>
+            <Setter Property="Foreground" Value="#FF404040"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3" BorderThickness="2" BorderBrush="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMouseCloneAutoFollowEnabled}" Value="True">
+                    <Setter Property="Foreground" Value="#FF909090"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="3" BorderThickness="2" BorderBrush="#FF353535">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : BOUTON HC+AF -->
+        <Style x:Key="HCAFButtonShortcut" TargetType="Button" BasedOn="{StaticResource ButtonShortcuts}">
+            <Setter Property="Width" Value="156.5"/>
+            <Setter Property="IsEnabled" Value="False"/>
+            <Setter Property="Foreground" Value="#FF404040"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3" BorderThickness="2" BorderBrush="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsHotkeyCloneAutoFollowEnabled}" Value="True">
+                    <Setter Property="Foreground" Value="#FF909090"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="3" BorderThickness="2" BorderBrush="#FF353535">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : CHECKBOX DE DELAIS -->
+        <Style x:Key="RoundedCheckBox" TargetType="CheckBox">
+            <Setter Property="Background" Value="#FF909090"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="5,0,5,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="CheckBoxBorder"
+                        Background="{TemplateBinding Background}"
+                        BorderThickness="0"
+                        CornerRadius="3"
+                        Width="16" 
+                        Height="16">
+                            <Border x:Name="CheckMark"
+                            Background="White"
+                            Margin="2.5"
+                            CornerRadius="1.5"
+                            Opacity="0"
+                            RenderTransformOrigin="0.5,0.5">
+                                <Border.RenderTransform>
+                                    <ScaleTransform x:Name="CheckMarkScale" ScaleX="0" ScaleY="0"/>
+                                </Border.RenderTransform>
+                            </Border>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Checked state avec animation -->
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckBoxBorder" Property="Background" Value="#3AAD3A"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <!-- Animation d'opacité -->
+                                            <DoubleAnimation Storyboard.TargetName="CheckMark"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     To="1"
+                                                     Duration="0:0:0.15"/>
+                                            <!-- Animation de scale -->
+                                            <DoubleAnimation Storyboard.TargetName="CheckMarkScale"
+                                                     Storyboard.TargetProperty="ScaleX"
+                                                     To="1"
+                                                     Duration="0:0:0.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetName="CheckMarkScale"
+                                                     Storyboard.TargetProperty="ScaleY"
+                                                     To="1"
+                                                     Duration="0:0:0.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <!-- Animation de disparition -->
+                                            <DoubleAnimation Storyboard.TargetName="CheckMark"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     To="0"
+                                                     Duration="0:0:0.1"/>
+                                            <DoubleAnimation Storyboard.TargetName="CheckMarkScale"
+                                                     Storyboard.TargetProperty="ScaleX"
+                                                     To="0"
+                                                     Duration="0:0:0.1"/>
+                                            <DoubleAnimation Storyboard.TargetName="CheckMarkScale"
+                                                     Storyboard.TargetProperty="ScaleY"
+                                                     To="0"
+                                                     Duration="0:0:0.1"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <!-- MouseOver state -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CheckBoxBorder" Property="Background" Value="#4BC64B"/>
+                                <Setter TargetName="CheckMark" Property="Background" Value="#F0F0F0"/>
+                            </Trigger>
+
+                            <!-- Pressed state -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="CheckBoxBorder" Property="Background" Value="#369936"/>
+                                <Setter TargetName="CheckMark" Property="Background" Value="#E0E0E0"/>
+                            </Trigger>
+
+                            <!-- Disabled state -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="CheckBoxBorder" Property="Background" Value="#FF505050"/>
+                                <Setter TargetName="CheckMark" Property="Background" Value="#FF606060"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : TEXTBOX DE DELAIS -->
+        <Style x:Key="TextBoxDelays" TargetType="TextBox">
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Width" Value="64.5"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+            <Setter Property="BorderBrush" Value="#FF909090"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#FF909090"/>
+            <Setter Property="FontFamily" Value="Bahnschrift Bold"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="MaxLength" Value="3"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+
+            <!-- Définition du ControlTemplate personnalisé -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border 
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}">
+                            <ScrollViewer x:Name="PART_ContentHost"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
+            <!-- ⬇️ EVENT SETTERS AVANT LES TRIGGERS -->
+            <EventSetter Event="GotFocus" Handler="TextBox_Delay_GotFocus"/>
+            <EventSetter Event="PreviewMouseDown" Handler="TextBox_Delay_PreviewMouseDown"/>
+            <EventSetter Event="PreviewKeyDown" Handler="TextBox_Delay_PreviewKeyDown"/>
+            <EventSetter Event="LostFocus" Handler="TextBox_Delay_LostFocus"/>
+            <EventSetter Event="KeyDown" Handler="TextBox_KeyDown"/>
+            <EventSetter Event="PreviewTextInput" Handler="NumberValidation_PreviewTextInput"/>
+            <EventSetter Event="DataObject.Pasting" Handler="NumberValidation_Pasting"/>
+
+            <!-- Gestion des états interactifs -->
+            <Style.Triggers>
+                <!-- Au survol de la souris -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#4BC64B"/>
+                    <Setter Property="BorderBrush" Value="#4BC64B"/>
+                </Trigger>
+
+                <!-- Quand la TextBox est focusée -->
+                <Trigger Property="IsKeyboardFocused" Value="True">
+                    <Setter Property="FontFamily" Value="Bahnschrift Light"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="BorderBrush" Value="White"/>
+                </Trigger>
+
+                <!-- Quand la TextBox est désactivée -->
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="#FF404040"/>
+                    <Setter Property="BorderBrush" Value="#FF404040"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : TEXTE DE SEPARATION DES DELAIS (à) -->
+        <Style x:Key="TxtBlocSeparator" TargetType="TextBlock">
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="Margin" Value="7.5,0,5,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontFamily" Value="Bahnschrift Light"/>
+            <Setter Property="FontSize" Value="9"/>
+
+            <Style.Triggers>
+                <!-- Quand le TextBloc est désactivé -->
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="#FF404040"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- STYLE : FLECHE DE COMBOBOX -->
+        <Style x:Key="FlatComboBoxToggleButton" TargetType="ToggleButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="Transparent" Width="20">
+                            <Path Data="M0,0 L4,4 8,0" 
+                                  Fill="white"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : ITEM DE LISTE DE COMBOBOX -->
+        <Style x:Key="FlatComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Background" Value="#404040"/>
+            <Setter Property="Foreground" Value="#FF909090"/>
+            <Setter Property="FontFamily" Value="Bahnschrift Light"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Grid Background="{TemplateBinding Background}" 
+                              Height="{TemplateBinding Height}"
+                              VerticalAlignment="Stretch">
+                            <ContentPresenter x:Name="content"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="5,0"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter Property="Background" Value="#369936"/>
+                                <Setter TargetName="content" Property="TextBlock.Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- STYLE : COMBOBOX -->
+        <Style x:Key="FlatComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Width" Value="182.5"/>
+            <Setter Property="Margin" Value="5,0,7.5,0"/>
+            <Setter Property="Background" Value="#FF353535"/>
+            <Setter Property="Foreground" Value="#FF909090"/>
+            <Setter Property="FontFamily" Value="Bahnschrift Bold"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="SelectedIndex" Value="0"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource FlatComboBoxItemStyle}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Fond de la ComboBox avec coins arrondis dynamiques -->
+                            <Border x:Name="ComboBoxBorder"
+                            Background="{TemplateBinding Background}"
+                            Grid.ColumnSpan="2"
+                            CornerRadius="5"
+                            MouseDown="ComboBox_MouseDown"/>
+
+                            <!-- Contenu sélectionné -->
+                            <ContentPresenter x:Name="contentPresenter"
+                                      Content="{TemplateBinding SelectionBoxItem}"
+                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                      ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                      Margin="22,0,0,0"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      IsHitTestVisible="False"/>
+
+                            <!-- Flèche avec animation de rotation -->
+                            <Grid Grid.Column="1" IsHitTestVisible="False">
+                                <Path x:Name="Arrow"
+                              Data="M0,0 L4,4 8,0" 
+                              Fill="white"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              RenderTransformOrigin="0.5,0.5">
+                                    <Path.RenderTransform>
+                                        <RotateTransform x:Name="ArrowRotation" Angle="0"/>
+                                    </Path.RenderTransform>
+                                </Path>
+                            </Grid>
+
+                            <!-- Popup avec animation -->
+                            <Popup x:Name="PART_Popup"
+                           IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                           Placement="Bottom"
+                           Width="{TemplateBinding ActualWidth}"
+                           StaysOpen="False"
+                           AllowsTransparency="True">
+                                <Border x:Name="PopupBorder"
+                                Background="#FF353535" 
+                                MaxHeight="200"
+                                CornerRadius="0,0,5,5"
+                                BorderThickness="0"
+                                RenderTransformOrigin="0.5,0">
+                                    <Border.RenderTransform>
+                                        <ScaleTransform x:Name="PopupScale" ScaleY="0"/>
+                                    </Border.RenderTransform>
+                                    <ScrollViewer CanContentScroll="True">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <!-- Quand le menu est ouvert : changer les coins de la ComboBox -->
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="ComboBoxBorder" Property="CornerRadius" Value="5,5,0,0"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <!-- Animation de déroulement -->
+                                            <DoubleAnimation Storyboard.TargetName="PopupScale"
+                                     Storyboard.TargetProperty="ScaleY"
+                                     From="0"
+                                     To="1"
+                                     Duration="0:0:0.15">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <!-- Rotation de la flèche -->
+                                            <DoubleAnimation Storyboard.TargetName="ArrowRotation"
+                                     Storyboard.TargetProperty="Angle"
+                                     From="0"
+                                     To="180"
+                                     Duration="0:0:0.15">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <!-- Juste la rotation de la flèche retour -->
+                                            <DoubleAnimation Storyboard.TargetName="ArrowRotation"
+                                     Storyboard.TargetProperty="Angle"
+                                     To="0"
+                                     Duration="0:0:0.15">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuadraticEase EasingMode="EaseIn"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Window.Resources>
+
+
+    <!-- FENÊTRE -->
+    <Border MouseDown="ClearFocus_MouseDown" Background="#FF252525" CornerRadius="10" BorderThickness="0">
+
+        <!-- INTERFACE GENERALE -->
+        <Grid x:Name="UIMainWindow" Width="400" Height="780" Background="#00FFFFFF" Focusable="True">
+            <StackPanel Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="400" Height="780" Orientation="Vertical">
+
+                <!-- BARRE DE TITRE -->
+                <Grid x:Name="TitleBar" Height="30" Background="Transparent" MouseDown="StackPanel_MouseDown">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Colonne gauche : Logo + Titre -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- Espace vide intermédiaire -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Colonne droite : Boutons -->
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Partie Gauche : Logo + Titre -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Image Source="/Optimizer;component/Resources/Icons/optimizer_logo.png" Height="20" Width="20" Margin="5,0,0,0"/>
+                        <TextBlock Text="Optimizer" VerticalAlignment="Center" Margin="5,0,0,0" FontFamily="Bahnschrift Light" Foreground="White"/>
+                    </StackPanel>
+
+                    <!-- Partie Droite : Boutons d'interface -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <!-- BOUTON MASQUER -->
+                        <Button x:Name="Btn_Hide" Style="{StaticResource WindowButtonStyle}" Click="Btn_Hide_Click">
+                            <Image Source="/Optimizer;component/Resources/Icons/hide.png" Height="10" Stretch="Uniform"/>
+                        </Button>
+
+                        <!-- BOUTON REDUIRE -->
+                        <Button x:Name="Btn_Minimize" Style="{StaticResource WindowButtonStyle}" Click="MinimizeButton_Click">
+                            <Image Source="/Optimizer;component/Resources/Icons/minimise.png" Height="10" Stretch="Uniform"/>
+                        </Button>
+
+                        <!-- BOUTON FERMER -->
+                        <Button x:Name="Btn_Close" Style="{StaticResource CloseButtonStyle}" Click="CloseButton_Click">
+                            <Image Source="/Optimizer;component/Resources/Icons/close.png" Height="10" Stretch="Uniform"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- LISTE DES PERSONNAGES -->
+                <DataGrid x:Name="TargetWindowsGrid"
+						  ItemsSource="{Binding CharactersViewModel.Personnages}"
+						  HeadersVisibility="Column"
+						  AutoGenerateColumns="False"
+						  CanUserAddRows="False"
+						  SelectionMode="Extended"
+						  SelectionUnit="Cell"
+						  IsReadOnly="True"
+						  Height="280"
+						  Width="390"
+						  Margin="5,5,5,5"
+						  Background="#00FFFFFF"
+						  BorderThickness="0"
+						  CanUserResizeColumns="False"
+						  CanUserReorderColumns="False"
+						  CanUserSortColumns="False"
+						  GridLinesVisibility="None">
+
+                    <DataGrid.Columns>
+                        <!-- COLONNE ORDRE -->
+                        <DataGridTextColumn Header="#" Binding="{Binding Order}" Width="30"/>
+                        <!-- COLONNE HANDLE -->
+                        <DataGridTextColumn Header="HANDLE" Binding="{Binding Handle}" Width="100" Visibility="Hidden"/>
+                        <!-- COLONNE MONTER -->
+                        <DataGridTemplateColumn Header="∧" Width="30">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button x:Name="Btn_UpSmall" Style="{StaticResource ButtonUpDownSmall}" 
+                                            Command="{Binding DataContext.CharactersViewModel.MoveUpCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                            CommandParameter="{Binding}">
+                                        <Button.Content>
+                                            <Image Source="/Optimizer;component/Resources/Icons/up.png" Height="7"  Stretch="Uniform"/>
+                                        </Button.Content>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- COLONNE DESCENDRE -->
+                        <DataGridTemplateColumn Header="∨" Width="30">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button x:Name="Btn_DownSmall" Style="{StaticResource ButtonUpDownSmall}" 
+                                            Command="{Binding DataContext.CharactersViewModel.MoveDownCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                            CommandParameter="{Binding}">
+                                        <Button.Content>
+                                            <Image Source="/Optimizer;component/Resources/Icons/down.png" Height="7" Stretch="Uniform"/>
+                                        </Button.Content>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- COLONNE NOM DE LA FENETRE -->
+                        <DataGridTextColumn Header="FENÊTRE" Binding="{Binding WindowName}" Width="200" Visibility="Hidden"/>
+                        <!-- COLONNE PERSONNAGE -->
+                        <DataGridTextColumn Header="PERSONNAGE" Binding="{Binding CharacterName}" Width="120" FontFamily="Myriad Pro SemiBold" FontSize="12"/>
+                        <!-- COLONNE MOUSE CLONE -->
+                        <DataGridTemplateColumn Header="MC" Width="45">
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ToggleButton x:Name="HeaderTglBtn_MC" Content="MC" 
+                                                      IsChecked="{Binding DataContext.CharactersViewModel.IsMouseCloneGlobalChecked, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" 
+                                                      Style="{StaticResource HeaderSwitchToggleButton}" IsEnabled="{Binding CanEnableMouseClone}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.HeaderTemplate>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ToggleButton x:Name="TglBtn_MC_WindowStatus" IsChecked="{Binding MouseClone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- COLONNE HOTKEY CLONE -->
+                        <DataGridTemplateColumn Header="HC" Width="45">
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ToggleButton x:Name="HeaderTglBtn_HC" Content="HC" 
+                                                      IsChecked="{Binding DataContext.CharactersViewModel.IsHotkeyCloneGlobalChecked, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" 
+                                                      Style="{StaticResource HeaderSwitchToggleButton}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.HeaderTemplate>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ToggleButton x:Name="TglBtn_HC_WindowStatus" IsChecked="{Binding HotkeyClone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- COLONNE WINDOW SWITCHER -->
+                        <DataGridTemplateColumn Header="WS" Width="45">
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ToggleButton x:Name="HeaderTglBtn_WS" Content="WS" 
+                                                      IsChecked="{Binding DataContext.CharactersViewModel.IsWindowSwitcherGlobalChecked, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" 
+                                                      Style="{StaticResource HeaderSwitchToggleButton}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.HeaderTemplate>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ToggleButton x:Name="TglBtn_WS_WindowStatus" IsChecked="{Binding WindowSwitcher, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- COLONNE EASY TEAM -->
+                        <DataGridTemplateColumn Header="ET" Width="45">
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ToggleButton x:Name="HeaderTglBtn_ET" Content="ET" 
+                                                      IsChecked="{Binding DataContext.CharactersViewModel.IsEasyTeamGlobalChecked, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" 
+                                                      Style="{StaticResource HeaderSwitchToggleButton}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.HeaderTemplate>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ToggleButton x:Name="TglBtn_ET_WindowStatus" IsChecked="{Binding EasyTeam, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource SwitchToggleButton}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- BOUTONS DE CONTROLE -->
+                <Grid Height="30" Margin="5,0,5,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- BOUTON REFRESH -->
+                    <Button x:Name="Btn_Refresh" 
+                            Grid.Column="0"
+                            Style="{StaticResource ButtonControl}" 
+                            Margin="0,0,2.5,0" 
+                            Command="{Binding RefreshCommand}">
+                        <Button.Content>
+                            <Image Source="/Optimizer;component/Resources/Icons/refresh.png" Stretch="Uniform" Height="15"/>
+                        </Button.Content>
+                    </Button>
+
+                    <!-- BOUTON QUICKLAUNCH/QUICKSTOP -->
+                    <Button x:Name="Btn_QuickLaunch" 
+                            Grid.Column="1"
+                            Margin="2.5,0,2.5,0" 
+                            Command="{Binding QuickLaunchCommand}"
+                            IsEnabled="{Binding CanUseQuickLaunch}">
+                        <Button.Content>
+                            <Image x:Name="QuickLaunchIcon" Stretch="Uniform" Height="15">
+                                <Image.Style>
+                                    <Style TargetType="Image">
+                                        <Setter Property="Source" Value="/Optimizer;component/Resources/Icons/quicklaunch.png"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsQuickLaunchMode}" Value="False">
+                                                <Setter Property="Source" Value="/Optimizer;component/Resources/Icons/quickstop.png"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Image.Style>
+                            </Image>
+                        </Button.Content>
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ButtonControl}">
+                                <Style.Triggers>
+                                    <!-- Passer en rouge si mode "Tout arrêter" -->
+                                    <DataTrigger Binding="{Binding IsQuickLaunchMode}" Value="False">
+                                        <Setter Property="Background" Value="#A3232B"/>
+                                    </DataTrigger>
+                                    <!-- Survol en rouge foncé si mode "Tout arrêter" -->
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding IsQuickLaunchMode}" Value="False"/>
+                                            <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Background" Value="#B3262F"/>
+                                    </MultiDataTrigger>
+                                    <!-- Cliqué en rouge encore plus foncé -->
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding IsQuickLaunchMode}" Value="False"/>
+                                            <Condition Binding="{Binding IsPressed, RelativeSource={RelativeSource Self}}" Value="True"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Background" Value="#791920"/>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <!-- BOUTON EASYTEAM -->
+                    <Button x:Name="Btn_EasyTeam" 
+                            Grid.Column="2"
+                            Style="{StaticResource ButtonControl}" 
+                            Margin="2.5,0,0,0" 
+                            Command="{Binding ExecuteEasyTeamCommand}" 
+                            IsEnabled="{Binding IsEasyTeamButtonEnabled}">
+                        <Button.Content>
+                            <Image Source="/Optimizer;component/Resources/Icons/easyteam.png" Stretch="Uniform" Height="15"/>
+                        </Button.Content>
+                    </Button>
+                </Grid>
+
+                <!-- BOUTON PARAMETRES -->
+                <ToggleButton x:Name="Btn_Settings" Style="{StaticResource ButtonSettings}" IsChecked="{Binding IsSettingsPanelExpanded, Mode=TwoWay}" Checked="ToggleButton_Checked" Unchecked="ToggleButton_Unchecked">
+                    <ToggleButton.Content>
+                        <Image Source="/Optimizer;component/Resources/Icons/settings.png" Stretch="Uniform" Height="15"/>
+                    </ToggleButton.Content>
+                </ToggleButton>
+
+                <!-- INTERFACE PARAMETRES -->
+                <StackPanel Orientation="Vertical" Height="390">
+
+                    <!-- SETUP - VITESSE D'EXÉCUTION -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
+                        <Separator Width="25" Height="16" Background="Transparent" Margin="10,0,0,0"/>
+                        <!-- TriStateToggle : 0=Lent(orange), 1=Normal(jaune), 2=Rapide(vert) -->
+                        <StackPanel Orientation="Horizontal" Width="167.5" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtBloc_STP_LabelSettings" Style="{StaticResource LabelSettings}" Text="Setup"/>
+                            <TextBlock Style="{StaticResource TooltipIcon}">
+                                <TextBlock.ToolTip>
+                                    <ToolTip Style="{StaticResource TooltipStyle}">
+                                        <StackPanel>
+                                            <TextBlock Text="Vitesse d'exécution des fonctionnalités" FontSize="13" FontWeight="Bold"/>
+                                            <TextBlock Text="Ajuste le délai entre chaque opération de fenêtre pour toutes les fonctionnalités." FontStyle="Italic" Margin="0,5,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="Lent - PC lents ou connexions instables" Margin="0,3,0,0"/>
+                                            <TextBlock Text="Normal - Équilibre pour la majorité des configurations" Margin="0,3,0,0"/>
+                                            <TextBlock Text="Rapide - PC performants" Margin="0,3,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="⚠︎ En cas de clics ou touches manqués, essayez Normal ou Lent." FontStyle="Italic" Margin="0,5,0,0"/>
+                                        </StackPanel>
+                                    </ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                       </StackPanel>
+
+                        <controls:TriStateToggle x:Name="TriStateToggle_STP" SpeedIndex="{Binding ExecutionSpeedIndex, Mode=TwoWay}"/>
+
+                        <!-- Bouton d'affichage de la valeur courante (non cliquable, se met à jour via DataTrigger) -->
+                        <Button x:Name="Btn_STP_Value" Width="136.5">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource STPButtonValue}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ExecutionSpeedIndex}" Value="0">
+                                            <Setter Property="Content" Value="Lent"/>
+                                            <Setter Property="Foreground" Value="#FF909090"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ExecutionSpeedIndex}" Value="1">
+                                            <Setter Property="Content" Value="Normal"/>
+                                            <Setter Property="Foreground" Value="#FF909090"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ExecutionSpeedIndex}" Value="2">
+                                            <Setter Property="Content" Value="Rapide"/>
+                                            <Setter Property="Foreground" Value="#FF909090"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                    </StackPanel>
+
+                    <!-- MOUSE CLONE -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,20,0,0">
+                        <ToggleButton x:Name="TglBtn_MC_GlobalStatus" 
+                                      Style="{StaticResource SwitchToggleButton}"
+                                      Margin="10,0,0,0" 
+                                      IsChecked="{Binding IsMouseCloneEnabled, Mode=TwoWay}"
+                                      IsEnabled="{Binding CanEnableMouseClone}"/>
+                        <StackPanel Orientation="Horizontal" Width="167.5" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtBloc_MC_LabelSettings" Style="{StaticResource LabelSettings}" Text="Mouse Clone"/>
+                            <!-- Symbole avec une infobulle personnalisée -->
+                            <TextBlock Style="{StaticResource TooltipIcon}">
+                                <TextBlock.ToolTip>
+                                    <ToolTip Style="{StaticResource TooltipStyle}">
+                                        <StackPanel>
+                                            <TextBlock Text="Fonctionnalité Mouse Clone" FontSize="13" FontWeight="Bold"/>
+                                            <TextBlock Text="Réplique un clic sur toutes les fenêtres actives (colonne MC) via un raccourci." FontStyle="Italic" Margin="0,5,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="Délais de déclenchement" FontWeight="Bold"/>
+                                            <TextBlock Text="Délai aléatoire appliqué avant chaque clic répliqué." Margin="0,3,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="Gestion des fenêtres" FontWeight="Bold"/>
+                                            <TextBlock Text="• Fenêtre unique - Clic répliqué sur chaque fenêtre depuis la fenêtre active" Margin="0,3,0,0"/>
+                                            <TextBlock Text="• Fenêtres individuelles - Bascule sur chaque fenêtre pour effectuer le clic répliqué" Margin="0,3,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="⚠︎ Une disposition d'interface identique sur chaque personnage est recommandée." FontStyle="Italic" Margin="0,3,0,0"/>
+                                        </StackPanel>
+                                    </ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                        </StackPanel>
+                        <Button x:Name="Btn_MC_Shortcut" Style="{StaticResource ButtonShortcuts}" Content="{Binding MouseCloneShortcut}" Click="ShortcutButton_Click"/>
+                    </StackPanel>
+
+                    <!-- MOUSE CLONE - DELAIS -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
+                        <TextBlock x:Name="TxtBloc_MC_DelaysLabelSettings" Style="{StaticResource SubLabelSettings}" Text="Délais de déclenchement"/>
+                        <CheckBox x:Name="ChkBox_MC_Delays" Style="{StaticResource RoundedCheckBox}" IsChecked="{Binding MouseCloneDelaysEnabled, Mode=TwoWay}"/>
+                        <TextBox x:Name="TxtBox_MC_MinDelay"
+                                 Style="{StaticResource TextBoxDelays}" 
+                                 Text="{Binding MouseCloneMinDelay, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat={}{0}ms}"
+                                 Margin="5,0,2.5,0" 
+                                 IsEnabled="{Binding MouseCloneDelaysEnabled}"/>
+                        <TextBlock Style="{StaticResource TxtBlocSeparator}" Text="à" IsEnabled="{Binding MouseCloneDelaysEnabled}"/>
+                        <TextBox x:Name="TxtBox_MC_MaxDelay"
+                                 Style="{StaticResource TextBoxDelays}" 
+                                 Text="{Binding MouseCloneMaxDelay, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat={}{0}ms}"
+                                 Margin="2.5,0,0,0" 
+                                 IsEnabled="{Binding MouseCloneDelaysEnabled}"/>
+                    </StackPanel>
+
+                    <!-- MOUSE CLONE - REPLICATION DU CLIC -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
+                        <TextBlock x:Name="TxtBloc_MC_LayoutLabelSettings" Style="{StaticResource SubLabelSettings}" Text="Gestion des fenêtres au clic"/>
+                        <ComboBox x:Name="CboBox_MC_Layout" Style="{StaticResource FlatComboBoxStyle}" SelectedIndex="{Binding MouseCloneLayoutIndex, Mode=TwoWay}">
+                            <ComboBoxItem Content="Fenêtre unique" IsEnabled="false" ToolTipService.ShowOnDisabled="True">
+                                <ComboBoxItem.ToolTip>
+                                    <ToolTip Style="{StaticResource TooltipStyle}">
+                                        <TextBlock Text="Réplique le clic depuis une seule fenêtre - Nerfé à la MAJ 3.5 😞💀💩"/>
+                                    </ToolTip>
+                                </ComboBoxItem.ToolTip>
+                            </ComboBoxItem>
+                            <ComboBoxItem Content="Fenêtres individuelles">
+                                <ComboBoxItem.ToolTip>
+                                    <ToolTip Style="{StaticResource TooltipStyle}">
+                                        <TextBlock Text="Réplique le clic sur chaque fenêtre - Débridé à la MAJ 3.5 🔥⚡🚀"/>
+                                    </ToolTip>
+                                </ComboBoxItem.ToolTip>
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- HOTKEY CLONE -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,20,0,0">
+                        <ToggleButton x:Name="TglBtn_HC_GlobalStatus" 
+                                      Style="{StaticResource SwitchToggleButton}"
+                                      Margin="10,0,0,0" 
+                                      IsChecked="{Binding IsHotkeyCloneEnabled, Mode=TwoWay}"
+                                      IsEnabled="{Binding CanEnableHotkeyClone}" />
+                        <StackPanel Orientation="Horizontal" Width="167.5" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtBloc_HC_LabelSettings" Style="{StaticResource LabelSettings}" Text="Hotkey Clone"/>
+                            <!-- Symbole avec une infobulle personnalisée -->
+                            <TextBlock Style="{StaticResource TooltipIcon}">
+                                <TextBlock.ToolTip>
+                                    <ToolTip Style="{StaticResource TooltipStyle}">
+                                        <StackPanel>
+                                            <TextBlock Text="Fonctionnalité Hotkey Clone" FontSize="13" FontWeight="Bold"/>
+                                            <TextBlock Text="Enregistre et réplique une saisie sur toutes les fenêtres actives (colonne HC) via un raccourci." FontStyle="Italic" Margin="0,5,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="Utilisation" FontWeight="Bold"/>
+                                            <TextBlock Text="• 1ère pression - Démarre l'enregistrement" Margin="0,3,0,0"/>
+                                            <TextBlock Text="• 2ème pression - Arrête l'enregistrement et réplique la saisie" Margin="0,3,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="Délais de déclenchement" FontWeight="Bold"/>
+                                            <TextBlock Text="Délai aléatoire appliqué avant chaque saisie répliquée." Margin="0,3,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="⚠︎ Les clics enregistrés doivent précéder la saisie de texte, pas la suivre." FontStyle="Italic" Margin="0,3,0,0"/>
+                                            <TextBlock Text="⚠︎ Une disposition d'interface identique sur chaque personnage est recommandée." FontStyle="Italic" Margin="0,3,0,0"/>
+                                        </StackPanel>
+                                    </ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                        </StackPanel>
+                        <Button x:Name="Btn_HC_Shortcut" Style="{StaticResource ButtonShortcuts}" Content="{Binding HotkeyCloneShortcut}" Click="ShortcutButton_Click"/>
+                    </StackPanel>
+
+                    <!-- HOTKEY CLONE - DELAIS -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
+                        <TextBlock x:Name="TxtBloc_HC_DelaysLabelSettings"  Style="{StaticResource SubLabelSettings}" Text="Délais de déclenchement"/>
+                        <CheckBox x:Name="ChkBox_HC_Delays" Style="{StaticResource RoundedCheckBox}" IsChecked="{Binding HotkeyCloneDelaysEnabled, Mode=TwoWay}"/>
+                        <TextBox x:Name="TxtBox_HC_MinDelay"
+                                 Style="{StaticResource TextBoxDelays}" 
+                                 Text="{Binding HotkeyCloneMinDelay, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat={}{0}ms}"
+                                 Margin="5,0,2.5,0"
+                                 IsEnabled="{Binding HotkeyCloneDelaysEnabled}"/>
+                        <TextBlock Style="{StaticResource TxtBlocSeparator}" Text="à" IsEnabled="{Binding HotkeyCloneDelaysEnabled}"/>
+                        <TextBox x:Name="TxtBox_HC_MaxDelay"
+                                 Style="{StaticResource TextBoxDelays}" 
+                                 Text="{Binding HotkeyCloneMaxDelay, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat={}{0}ms}"
+                                 Margin="2.5,0,0,0" 
+                                 IsEnabled="{Binding HotkeyCloneDelaysEnabled}"/>
+                    </StackPanel>
+
+                    <!-- WINDOW SWITCHER -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,20,0,0">
+                        <ToggleButton x:Name="TglBtn_WS_GlobalStatus" 
+                                      Style="{StaticResource SwitchToggleButton}"
+                                      Margin="10,0,0,0" 
+                                      IsChecked="{Binding IsWindowSwitcherEnabled, Mode=TwoWay}"
+                                      IsEnabled="{Binding CanEnableWindowSwitcher}" />
+                        <StackPanel Orientation="Horizontal" Width="167.5" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtBloc_WS_LabelSettings" Style="{StaticResource LabelSettings}" Text="Window Switcher"/>
+                            <!-- Symbole avec une infobulle personnalisée -->
+                            <TextBlock Style="{StaticResource TooltipIcon}">
+                                <TextBlock.ToolTip>
+                                    <ToolTip Style="{StaticResource TooltipStyle}">
+                                        <StackPanel>
+                                            <TextBlock Text="Fonctionnalité Window Switcher" FontSize="13" FontWeight="Bold"/>
+                                            <TextBlock Text="Bascule vers le personnage suivant dans la liste (colonne WS) via un raccourci." FontStyle="Italic" Margin="0,5,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="⚠︎ L'ordre de basculement suit l'ordre de la liste, modifiable via les boutons ▲ et ▼." FontStyle="Italic" Margin="0,3,0,0"/>
+                                        </StackPanel>
+                                    </ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                        </StackPanel>
+                        <Button x:Name="Btn_WS_Shortcut" Style="{StaticResource ButtonShortcuts}" Content="{Binding WindowSwitcherShortcut}" Click="ShortcutButton_Click"/>
+                    </StackPanel>
+
+                    <!-- EASY TEAM -->
+                    <StackPanel Orientation="Horizontal" Background="Transparent" Margin="0,20,0,0">
+                        <Separator Width="25" Height="16" Background="Transparent" Margin="10,0,0,0"/>
+                        <StackPanel Orientation="Horizontal" Width="167.5" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtBloc_ET_LabelSettings" Style="{StaticResource LabelSettings}" Text="Easy Team"/>
+                            <!-- Symbole avec une infobulle personnalisée -->
+                            <TextBlock Style="{StaticResource TooltipIcon}">
+                                <TextBlock.ToolTip>
+                                    <ToolTip Style="{StaticResource TooltipStyle}">
+                                        <StackPanel>
+                                            <TextBlock Text="Fonctionnalité Easy Team" FontSize="13" FontWeight="Bold"/>
+                                            <TextBlock Text="Invite automatiquement tous les personnages actifs (colonne ET) depuis la fenêtre du chef d'équipe." FontStyle="Italic" Margin="0,5,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="Mouse Clone + AutoFollow" FontWeight="Bold"/>
+                                            <TextBlock Text="Réplique un clic puis réactive le suivi du chef d'équipe en jeu via Alt + [Raccourci MC]." Margin="0,3,0,0"/>
+                                            <TextBlock Text="• Pratique pour utiliser Mouse Clone sur un Zaap et regrouper l'équipe après téléportation." Margin="0,3,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="Hotkey Clone + AutoFollow" FontWeight="Bold"/>
+                                            <TextBlock Text="Réplique une saisie puis réactive le suivi du chef d'équipe en jeu via Alt + [Raccourci HC]." Margin="0,3,0,0"/>
+                                            <TextBlock Text="• Pratique pour utiliser Hotkey Clone sur un consommable de téléportation et regrouper l'équipe après téléportation." Margin="0,3,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="Raccourci AutoFollow en jeu" FontWeight="Bold"/>
+                                            <TextBlock Text="Raccourci utilisé en jeu pour activer/désactiver le suivi d'équipe automatique." Margin="0,3,0,0"/>
+                                            <TextBlock Text=""/>
+                                            <TextBlock Text="⚠︎ L'invitation doit être acceptée manuellement - Mouse Clone peut faciliter cette étape." FontStyle="Italic" Margin="0,3,0,0"/>
+                                            <TextBlock Text="⚠︎ MC/HC + AutoFollow nécessitent leurs fonctionnalités respectives activées et un chef d'équipe défini." FontStyle="Italic" Margin="0,3,0,0"/>
+                                        </StackPanel>
+                                    </ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                        </StackPanel>
+                        <ComboBox x:Name="CboBox_ET_Leader" Style="{StaticResource FlatComboBoxStyle}" ItemsSource="{Binding LeaderOptions}" DisplayMemberPath="DisplayName" SelectedItem="{Binding SelectedLeader, Mode=TwoWay}"/>
+                    </StackPanel>
+
+                    <!-- EASY TEAM - MC + AUTOFOLLOW -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
+                        <TextBlock x:Name="TxtBloc_MCAF_LabelSettings" Style="{StaticResource SubLabelSettings}" Text="Mouse Clone + AutoFollow"/>
+                        <CheckBox x:Name="ChkBox_MCAF_Activate" Style="{StaticResource RoundedCheckBox}" IsChecked="{Binding IsMouseCloneAutoFollowEnabled, Mode=TwoWay}" IsEnabled="{Binding CanEnableAutoFollow}"/>
+                        <Button x:Name="Btn_MCAF_Shortcut" Style="{StaticResource MCAFButtonShortcut}" Content="{Binding MouseCloneAutoFollowShortcut}"/>
+                    </StackPanel>
+
+                    <!-- EASY TEAM - HC + AUTOFOLLOW -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
+                        <TextBlock x:Name="TxtBloc_HCAF_LabelSettings" Style="{StaticResource SubLabelSettings}" Text="Hotkey Clone + AutoFollow"/>
+                        <CheckBox x:Name="ChkBox_HCAF_Activate" Style="{StaticResource RoundedCheckBox}" IsChecked="{Binding IsHotkeyCloneAutoFollowEnabled, Mode=TwoWay}" IsEnabled="{Binding CanEnableAutoFollow}"/>
+                        <Button x:Name="Btn_HCAF_Shortcut" Style="{StaticResource HCAFButtonShortcut}" Content="{Binding HotkeyCloneAutoFollowShortcut}"/>
+                    </StackPanel>
+
+                    <!-- EASY TEAM - AUTOFOLLOW SHORTCUT -->
+                    <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
+                        <TextBlock x:Name="TxtBloc_AF_LabelSettings"  Style="{StaticResource SubLabelSettings}" Text="Raccourci AutoFollow en jeu"/>
+                        <Button x:Name="Btn_AF_Shortcut" Style="{StaticResource ButtonShortcuts}" Content="{Binding AutoFollowShortcut}" Click="ShortcutButton_Click"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Overlay pour bloquer les interactions -->
+            <Border x:Name="Overlay" Background="#90000000" Visibility="Collapsed" CornerRadius="10" BorderThickness="0">
+                <TextBlock Text="Définir un raccourci..." HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="20" FontWeight="Bold"/>
+            </Border>
+
+            <!-- Overlay sombre + barre de progression verte -->
+            <Grid Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVisibilityConverter}}"
+      Panel.ZIndex="999">
+
+                <!-- Fond sombre semi-transparent bloquant toutes les interactions -->
+                <Border Background="#CC000000" IsHitTestVisible="True"/>
+
+                <!-- Contenu centré -->
+                <StackPanel VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Width="320">
+
+                    <!-- Titre -->
+                    <TextBlock Text="{Binding UpdateStatusText}"
+                   Foreground="White"
+                   FontSize="14"
+                   FontWeight="SemiBold"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,16"/>
+
+                    <!-- Conteneur de la barre -->
+                    <Border CornerRadius="4"
+                Background="#33FFFFFF"
+                Height="12"
+                ClipToBounds="True">
+
+                        <!-- Barre de progression verte -->
+                        <Border HorizontalAlignment="Left"
+                    CornerRadius="4"
+                    Background="#4CAF50"
+                    Height="12">
+                            <Border.Width>
+                                <MultiBinding Converter="{StaticResource ProgressToWidthConverter}">
+                                    <Binding Path="UpdateProgress"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=Border, AncestorLevel=1}"
+                                 Path="ActualWidth"/>
+                                </MultiBinding>
+                            </Border.Width>
+                        </Border>
+
+                    </Border>
+
+                    <!-- Pourcentage -->
+                    <TextBlock FontSize="11" Foreground="#AAFFFFFF" HorizontalAlignment="Center" Margin="0,8,0,0">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0:0}%">
+                                <Binding Path="UpdateProgress" Converter="{StaticResource ProgressToPercentConverter}"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
