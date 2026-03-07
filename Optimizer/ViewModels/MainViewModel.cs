@@ -703,6 +703,7 @@ namespace Optimizer.ViewModels
                     IsUpdating = false;
                     Logger.Log($"❌ Erreur de mise à jour : {message}");
                     // Silencieux pour l'utilisateur — l'app continue normalement
+                    System.Windows.Forms.MessageBox.Show($"Erreur MAJ : {message}"); // ← temporaire
                 });
             };
 
