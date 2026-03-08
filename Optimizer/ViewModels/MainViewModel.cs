@@ -6,6 +6,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -670,6 +671,8 @@ namespace Optimizer.ViewModels
         {
             _updateService.AlreadyUpToDate += () =>
             {
+                App.Current.Dispatcher.Invoke(() =>
+                    System.Windows.Forms.MessageBox.Show("AlreadyUpToDate déclenché"));
             };
 
             _updateService.ProgressChanged += progress =>
@@ -705,6 +708,15 @@ namespace Optimizer.ViewModels
             };
 
             await _updateService.CheckAndUpdateAsync();
+        }
+
+        public string AppVersion
+        {
+            get
+            {
+                var v = Assembly.GetExecutingAssembly().GetName().Version;
+                return v is null ? "" : $"v{v.Major}.{v.Minor}.{v.Build}";
+            }
         }
 
         private void Personnage_PropertyChanged(object? sender, PropertyChangedEventArgs e)

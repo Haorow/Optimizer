@@ -1028,6 +1028,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Image Source="/Optimizer;component/Resources/Icons/optimizer_logo.png" Height="20" Width="20" Margin="5,0,0,0"/>
                         <TextBlock Text="Optimizer" VerticalAlignment="Center" Margin="5,0,0,0" FontFamily="Bahnschrift Light" Foreground="White"/>
+                        <TextBlock Text="{Binding AppVersion}" VerticalAlignment="Center" Margin="5,0,0,0" FontFamily="Bahnschrift Light" FontSize="9" Foreground="#FF606060"/>
                     </StackPanel>
 
                     <!-- Partie Droite : Boutons d'interface -->
@@ -1528,56 +1529,46 @@
             </Border>
 
             <!-- Overlay sombre + barre de progression verte -->
-            <Grid Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVisibilityConverter}}" Panel.ZIndex="999">
+            <Grid Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVisibilityConverter}}"
+      Panel.ZIndex="999">
 
-                <!-- Fond sombre semi-transparent bloquant toutes les interactions -->
-                <Border Background="#CC000000" IsHitTestVisible="True"/>
+                <!-- Fond sombre -->
+                <Border Background="#CC000000" IsHitTestVisible="True" CornerRadius="10"/>
 
-                <!-- Contenu centré -->
-                <StackPanel VerticalAlignment="Top"
-                HorizontalAlignment="Center"
-                Width="320">
+                <!-- Barre verte qui recouvre progressivement depuis la gauche -->
+                <Border HorizontalAlignment="Left"
+            CornerRadius="10"
+            Background="#CC1A7A1A"
+            IsHitTestVisible="True">
+                    <Border.Width>
+                        <MultiBinding Converter="{StaticResource ProgressToWidthConverter}">
+                            <Binding Path="UpdateProgress"/>
+                            <Binding RelativeSource="{RelativeSource AncestorType=Grid}"
+                         Path="ActualWidth"/>
+                        </MultiBinding>
+                    </Border.Width>
+                </Border>
 
-                    <!-- Titre -->
+                <!-- Texte centré -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <TextBlock Text="{Binding UpdateStatusText}"
                    Foreground="White"
                    FontSize="14"
                    FontWeight="SemiBold"
+                   HorizontalAlignment="Center"/>
+                    <TextBlock Foreground="#AAFFFFFF"
+                   FontSize="11"
                    HorizontalAlignment="Center"
-                   Margin="0,0,0,16"/>
-
-                    <!-- Conteneur de la barre -->
-                    <Border CornerRadius="4"
-                Background="#33FFFFFF"
-                Height="12"
-                ClipToBounds="True">
-
-                        <!-- Barre de progression verte -->
-                        <Border HorizontalAlignment="Left"
-                    CornerRadius="4"
-                    Background="#4CAF50"
-                    Height="12">
-                            <Border.Width>
-                                <MultiBinding Converter="{StaticResource ProgressToWidthConverter}">
-                                    <Binding Path="UpdateProgress"/>
-                                    <Binding RelativeSource="{RelativeSource AncestorType=Border, AncestorLevel=1}"
-                                 Path="ActualWidth"/>
-                                </MultiBinding>
-                            </Border.Width>
-                        </Border>
-
-                    </Border>
-
-                    <!-- Pourcentage -->
-                    <TextBlock FontSize="11" Foreground="#AAFFFFFF" HorizontalAlignment="Center" Margin="0,8,0,0">
+                   Margin="0,8,0,0">
                         <TextBlock.Text>
                             <MultiBinding StringFormat="{}{0:0}%">
-                                <Binding Path="UpdateProgress" Converter="{StaticResource ProgressToPercentConverter}"/>
+                                <Binding Path="UpdateProgress"
+                             Converter="{StaticResource ProgressToPercentConverter}"/>
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
-
                 </StackPanel>
+
             </Grid>
         </Grid>
     </Border>
