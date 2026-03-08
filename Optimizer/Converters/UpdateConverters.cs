@@ -15,11 +15,12 @@ namespace Optimizer.Converters
         {
             if (values.Length < 2)
                 return 0.0;
-
             if (values[0] is not double progress || values[1] is not double containerWidth)
                 return 0.0;
 
-            return Math.Max(0, Math.Min(containerWidth, containerWidth * progress));
+            double margin = 10.0; // 5px de chaque côté
+            double availableWidth = containerWidth - margin;
+            return Math.Max(0, Math.Min(availableWidth, availableWidth * progress));
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

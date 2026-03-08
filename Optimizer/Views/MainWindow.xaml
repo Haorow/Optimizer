@@ -9,6 +9,8 @@
         xmlns:controls="clr-namespace:Optimizer.Controls"
 		mc:Ignorable="d"
         
+        x:Name="MainWindowRoot"
+        
         Title="Optimizer V1"
 		WindowStyle="None"
         ResizeMode="NoResize"
@@ -1007,7 +1009,7 @@
 
 
     <!-- FENÊTRE -->
-    <Border MouseDown="ClearFocus_MouseDown" Background="#FF252525" CornerRadius="10" BorderThickness="0">
+    <Border x:Name="MainWindowBorder" MouseDown="ClearFocus_MouseDown" Background="#FF252525" CornerRadius="10" BorderThickness="0">
 
         <!-- INTERFACE GENERALE -->
         <Grid x:Name="UIMainWindow" Width="400" Height="780" Background="#00FFFFFF" Focusable="True">
@@ -1529,47 +1531,40 @@
             </Border>
 
             <!-- Overlay sombre + barre de progression verte -->
-            <Grid Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVisibilityConverter}}"
-      Panel.ZIndex="999">
-
-                <!-- Fond sombre -->
-                <Border Background="#CC000000" IsHitTestVisible="True" CornerRadius="10"/>
-
-                <!-- Barre verte qui recouvre progressivement depuis la gauche -->
-                <Border HorizontalAlignment="Left"
-            CornerRadius="10"
-            Background="#CC1A7A1A"
-            IsHitTestVisible="True">
-                    <Border.Width>
-                        <MultiBinding Converter="{StaticResource ProgressToWidthConverter}">
-                            <Binding Path="UpdateProgress"/>
-                            <Binding RelativeSource="{RelativeSource AncestorType=Grid}"
-                         Path="ActualWidth"/>
-                        </MultiBinding>
-                    </Border.Width>
-                </Border>
-
-                <!-- Texte centré -->
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding UpdateStatusText}"
-                   Foreground="White"
-                   FontSize="14"
-                   FontWeight="SemiBold"
-                   HorizontalAlignment="Center"/>
-                    <TextBlock Foreground="#AAFFFFFF"
-                   FontSize="11"
-                   HorizontalAlignment="Center"
-                   Margin="0,8,0,0">
-                        <TextBlock.Text>
-                            <MultiBinding StringFormat="{}{0:0}%">
-                                <Binding Path="UpdateProgress"
-                             Converter="{StaticResource ProgressToPercentConverter}"/>
+            <Border Panel.ZIndex="999"
+                    CornerRadius="10"
+                    VerticalAlignment="Top"
+                    Background="#CC000000"
+                    IsHitTestVisible="True"
+                    Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Window}}"
+                    Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Border HorizontalAlignment="Left"
+                            Background="#CC1A7A1A"
+                            Margin="5"
+                            CornerRadius="7">
+                        <Border.Width>
+                            <MultiBinding Converter="{StaticResource ProgressToWidthConverter}">
+                                <Binding Path="UpdateProgress"/>
+                                <Binding ElementName="UIMainWindow" Path="ActualWidth"/>
                             </MultiBinding>
-                        </TextBlock.Text>
-                    </TextBlock>
-                </StackPanel>
-
-            </Grid>
+                        </Border.Width>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock Text="{Binding UpdateStatusText}"
+                                   Foreground="White" FontSize="14" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                                    <TextBlock Foreground="#AAFFFFFF" FontSize="11"
+                                   HorizontalAlignment="Center" Margin="0,8,0,0">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0:0}%">
+                                    <Binding Path="UpdateProgress" Converter="{StaticResource ProgressToPercentConverter}"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                </Grid>
+            </Border>
         </Grid>
     </Border>
 </Window>

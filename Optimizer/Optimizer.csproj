@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- Version de l'application -->
-    <AppVersion>1.0.0</AppVersion>
+    <AppVersion>0.7.0</AppVersion>
     
     <Version>$(AppVersion)</Version>
     <AssemblyVersion>$(AppVersion)</AssemblyVersion>

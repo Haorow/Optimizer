@@ -671,8 +671,6 @@ namespace Optimizer.ViewModels
         {
             _updateService.AlreadyUpToDate += () =>
             {
-                App.Current.Dispatcher.Invoke(() =>
-                    System.Windows.Forms.MessageBox.Show("AlreadyUpToDate déclenché"));
             };
 
             _updateService.ProgressChanged += progress =>

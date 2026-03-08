@@ -62,9 +62,6 @@ namespace Optimizer.Services
             using var client = CreateHttpClient();
             var response = await client.GetAsync(GitHubApiUrl);
 
-            // Diagnostic temporaire
-            System.Windows.Forms.MessageBox.Show($"Status : {(int)response.StatusCode}");
-
             // Rate limit atteint → ignorer silencieusement
             if ((int)response.StatusCode == 403 || (int)response.StatusCode == 429)
                 return (false, null);
@@ -77,9 +74,6 @@ namespace Optimizer.Services
 
             string tagName = root.GetProperty("tag_name").GetString() ?? string.Empty;
             string remoteVersion = tagName.TrimStart('v', 'V');
-
-            // Diagnostic temporaire
-            System.Windows.Forms.MessageBox.Show($"Tag : {tagName} | Remote : {remoteVersion} | Local : {Assembly.GetExecutingAssembly().GetName().Version}");
 
             string? downloadUrl = null;
             if (root.TryGetProperty("assets", out var assets))
@@ -94,9 +88,6 @@ namespace Optimizer.Services
                     }
                 }
             }
-
-            // Diagnostic temporaire
-            System.Windows.Forms.MessageBox.Show($"DownloadUrl : {downloadUrl ?? "null"} | HasUpdate : {IsNewerVersion(remoteVersion)}");
 
             bool hasUpdate = IsNewerVersion(remoteVersion);
             return (hasUpdate && downloadUrl is not null, downloadUrl);
