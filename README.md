@@ -36,3 +36,7 @@ Si tu souhaites contribuer, crée un fichier `Secrets.cs` à la racine du projet
     }
 
 Un token GitHub avec la permission `public_repo` est suffisant.
+
+## Licence
+
+Ce projet est sous licence [GPL v3](LICENSE) — utilisation et modification libres, redistribution obligatoirement open source.
