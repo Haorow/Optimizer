@@ -6,19 +6,15 @@ Elle complète les fonctionnalités existantes en jeu pour offrir une expérienc
 ## Fonctionnalités
 
 **Mouse Clone**
-
 Réplique un clic dans toutes les fenêtres actives, qu'elles soient au premier plan ou non, via un raccourci défini par l'utilisateur.
 
 **Hotkey Clone**
-
 Enregistre et réplique une saisie dans toutes les fenêtres actives, qu'elles soient au premier plan ou non, via un raccourci défini par l'utilisateur.
 
 **Window Switcher**
-
 Bascule vers la fenêtre personnage suivant dans la liste via un raccourci défini par l'utilisateur, en suivant l'ordre défini.
 
 **Easy Team**
-
 Invite automatiquement tous les personnages actifs depuis la fenêtre du chef d'équipe. Supporte également Mouse Clone + AutoFollow et Hotkey Clone + AutoFollow pour regrouper l'équipe après téléportation.
 
 ## Installation
