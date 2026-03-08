@@ -1,7 +1,7 @@
 # Optimizer
 
 Optimizer est une application WPF conçue pour le jeu Dofus Unity dont l'objectif est d'améliorer et rendre plus confortable le jeu en multicompte.
-Elle complète les fonctionnalités existantes en jeu pour offrir une expérience multicompte plus fluide et efficace.
+Elle complète les fonctionnalités existantes en jeu pour offrir une expérience multicompte plus fluide.
 
 ## Fonctionnalités
 
