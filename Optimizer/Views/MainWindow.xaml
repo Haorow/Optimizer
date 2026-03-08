@@ -1541,8 +1541,8 @@
                 <Grid>
                     <Border HorizontalAlignment="Left"
                             Background="#CC1A7A1A"
-                            Margin="5"
-                            CornerRadius="7">
+                            Margin="2.5"
+                            CornerRadius="7.5">
                         <Border.Width>
                             <MultiBinding Converter="{StaticResource ProgressToWidthConverter}">
                                 <Binding Path="UpdateProgress"/>
@@ -1552,9 +1552,9 @@
                     </Border>
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock Text="{Binding UpdateStatusText}"
-                                   Foreground="White" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="White" FontFamily="Bahnschrift SemiBold" FontSize="14" FontWeight="SemiBold"
                                    HorizontalAlignment="Center"/>
-                                    <TextBlock Foreground="#AAFFFFFF" FontSize="11"
+                        <TextBlock Foreground="#AAFFFFFF" FontFamily="Bahnschrift light" FontSize="12"
                                    HorizontalAlignment="Center" Margin="0,8,0,0">
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}{0:0}%">

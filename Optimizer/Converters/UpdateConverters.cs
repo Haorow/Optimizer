@@ -18,7 +18,7 @@ namespace Optimizer.Converters
             if (values[0] is not double progress || values[1] is not double containerWidth)
                 return 0.0;
 
-            double margin = 10.0; // 5px de chaque côté
+            double margin = 5.0; // 5px de chaque côté
             double availableWidth = containerWidth - margin;
             return Math.Max(0, Math.Min(availableWidth, availableWidth * progress));
         }
