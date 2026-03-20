@@ -11,7 +11,7 @@
         
         x:Name="MainWindowRoot"
         
-        Title="Optimizer V1"
+        Title="Optimizer"
 		WindowStyle="None"
         ResizeMode="NoResize"
         AllowsTransparency="True"
