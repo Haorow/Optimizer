@@ -19,6 +19,8 @@ namespace Optimizer.Services
         private const string TempZipName = "Optimizer_update.zip";
         private const string TempExtractDir = "Optimizer_update_tmp";
         private const string UpdateBatName = "update.bat";
+        private const string LastCheckFile = "last_update_check.json";
+        private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(1);
 
         // ── Événements ───────────────────────────────────────────────────────
         /// <summary>Progression du téléchargement (0.0 → 1.0).</summary>
@@ -37,9 +39,21 @@ namespace Optimizer.Services
         public async Task CheckAndUpdateAsync()
         {
             CleanupResidualFiles();
+
+            // Cache 1h — skip silencieux si déjà vérifié récemment
+            if (!ShouldCheck())
+            {
+                AlreadyUpToDate?.Invoke();
+                return;
+            }
+
             try
             {
                 var (hasUpdate, downloadUrl) = await FetchLatestReleaseAsync();
+
+                // Sauvegarder le timestamp du check même si pas de mise à jour
+                SaveLastCheckTime();
+
                 if (!hasUpdate || downloadUrl is null)
                 {
                     AlreadyUpToDate?.Invoke();
@@ -54,6 +68,35 @@ namespace Optimizer.Services
             {
                 UpdateError?.Invoke(ex.Message);
             }
+        }
+
+        // ── Cache ─────────────────────────────────────────────────────────────
+        private static bool ShouldCheck()
+        {
+            try
+            {
+                string path = GetAppPath(LastCheckFile);
+                if (!File.Exists(path)) return true;
+
+                using var doc = JsonDocument.Parse(File.ReadAllText(path));
+                string? raw = doc.RootElement.GetProperty("last_check").GetString();
+
+                if (DateTime.TryParse(raw, out DateTime lastCheck))
+                    return DateTime.UtcNow - lastCheck > CheckInterval;
+
+                return true;
+            }
+            catch { return true; }
+        }
+
+        private static void SaveLastCheckTime()
+        {
+            try
+            {
+                string json = JsonSerializer.Serialize(new { last_check = DateTime.UtcNow.ToString("O") });
+                File.WriteAllText(GetAppPath(LastCheckFile), json);
+            }
+            catch { /* silencieux */ }
         }
 
         // ── Vérification de version ───────────────────────────────────────────
@@ -140,13 +183,10 @@ namespace Optimizer.Services
             string zipPath = GetAppPath(TempZipName);
             string extractDir = GetAppPath(TempExtractDir);
 
-            // Nettoyer le dossier temporaire s'il existe déjà
             if (Directory.Exists(extractDir))
                 Directory.Delete(extractDir, recursive: true);
 
             ZipFile.ExtractToDirectory(zipPath, extractDir);
-
-            // Supprimer le zip maintenant qu'il est extrait
             File.Delete(zipPath);
         }
 
@@ -158,12 +198,6 @@ namespace Optimizer.Services
             string extractDir = GetAppPath(TempExtractDir);
             string batPath = GetAppPath(UpdateBatName);
 
-            // Le .bat :
-            // 1. Attend la fermeture d'Optimizer
-            // 2. Copie tous les fichiers du dossier extrait vers le dossier de l'app
-            // 3. Supprime le dossier temporaire
-            // 4. Relance Optimizer
-            // 5. Se supprime lui-même
             string bat = $"""
                 @echo off
                 timeout /t 2 /nobreak >nul
@@ -185,10 +219,6 @@ namespace Optimizer.Services
         }
 
         // ── Nettoyage ─────────────────────────────────────────────────────────
-        /// <summary>
-        /// Supprime les fichiers résiduels d'une mise à jour interrompue.
-        /// Appelé au démarrage de l'application.
-        /// </summary>
         private static void CleanupResidualFiles()
         {
             TryDelete(GetAppPath(TempZipName));
@@ -219,8 +249,6 @@ namespace Optimizer.Services
                 new ProductInfoHeaderValue("Optimizer", GetLocalVersion()));
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
-            // Authentification GitHub — augmente la limite à 5000 req/heure
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Secrets.GitHubToken);
             return client;
         }
 
