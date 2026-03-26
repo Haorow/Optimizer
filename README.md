@@ -22,6 +22,10 @@ Invite automatiquement tous les personnages actifs depuis la fenêtre du chef d'
 Télécharge la dernière release depuis l'onglet [Releases](https://github.com/Haorow/Optimizer/releases), extrais le contenu du zip et lance `Optimizer.exe`.
 L'application vérifie automatiquement les mises à jour au démarrage.
 
+## Site de l'application
+
+Vous pouvez retrouver plus d'informations sur l'application ainsi que son guide d'utilisation sur le [site de l'application](https://haorow.github.io/Optimizer-ModeHeros/).
+
 ## Contribution
 
 Ce projet utilise un fichier `Secrets.cs` non versionné pour stocker le token GitHub utilisé par le système de mise à jour.
