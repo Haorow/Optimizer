@@ -1374,7 +1374,7 @@
                     <StackPanel Orientation="Horizontal" Height="20" Margin="0,10,0,0">
                         <TextBlock x:Name="TxtBloc_MC_LayoutLabelSettings" Style="{StaticResource SubLabelSettings}" Text="Gestion des fenêtres au clic"/>
                         <ComboBox x:Name="CboBox_MC_Layout" Style="{StaticResource FlatComboBoxStyle}" SelectedIndex="{Binding MouseCloneLayoutIndex, Mode=TwoWay}">
-                            <ComboBoxItem Content="Fenêtre unique" IsEnabled="false" ToolTipService.ShowOnDisabled="True">
+                            <ComboBoxItem Content="Fenêtre unique" IsEnabled="true" ToolTipService.ShowOnDisabled="True">
                                 <ComboBoxItem.ToolTip>
                                     <ToolTip Style="{StaticResource TooltipStyle}">
                                         <TextBlock Text="Réplique le clic depuis une seule fenêtre - Nerfé à la MAJ 3.5 😞💀💩"/>
@@ -1531,7 +1531,7 @@
             </Border>
 
             <!-- Overlay sombre + barre de progression verte -->
-            <Border Panel.ZIndex="999"
+            <Border Panel.ZIndex="998"
                     CornerRadius="10"
                     VerticalAlignment="Top"
                     Background="#CC000000"
@@ -1564,6 +1564,16 @@
                         </TextBlock>
                     </StackPanel>
                 </Grid>
+            </Border>
+
+            <!-- Overlay blocage appli - A suppr pour faire fonctionner l'appli -->
+            <Border Panel.ZIndex="999"
+                    CornerRadius="10"
+                    VerticalAlignment="Top"
+                    Background="#000000"
+                    IsHitTestVisible="True"
+                    Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Window}}"
+                    Visibility="Visible">
             </Border>
         </Grid>
     </Border>
