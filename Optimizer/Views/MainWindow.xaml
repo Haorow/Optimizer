@@ -1565,16 +1565,6 @@
                     </StackPanel>
                 </Grid>
             </Border>
-
-            <!-- Overlay blocage appli - A suppr pour faire fonctionner l'appli -->
-            <Border Panel.ZIndex="999"
-                    CornerRadius="10"
-                    VerticalAlignment="Top"
-                    Background="#000000"
-                    IsHitTestVisible="True"
-                    Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Window}}"
-                    Visibility="Visible">
-            </Border>
         </Grid>
     </Border>
 </Window>
